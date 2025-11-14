@@ -2,6 +2,8 @@ import { Token } from '@/interfaces/Token'
 import Chart from '../Chart/Chart'
 import Swap from '../Swap/Swap'
 import Modal from '../ui/Modal'
+import { X, LogOut } from 'lucide-react'
+import { useDisconnect } from 'wagmi'
 
 interface BubbleModalProps {
   selectedToken: Token
@@ -11,6 +13,7 @@ export default function BubbleModal({
   selectedToken,
   onClose,
 }: BubbleModalProps) {
+  const { disconnect } = useDisconnect()
   return (
     <Modal
       isOpen
@@ -18,6 +21,12 @@ export default function BubbleModal({
       className="mt-0 w-[95vw] max-w-none space-y-3 rounded-lg border border-white/20 bg-white/10 p-4 text-white backdrop-blur-md"
       backdropClassName=""
     >
+      {/* <button onClick={onClose} className="absolute top-5 right-4">
+        <X className="size-4" />
+      </button> */}
+      <button onClick={() => disconnect()} className="absolute top-5 right-4">
+        <LogOut className="size-4" />
+      </button>
       <div className="flex items-center gap-3">
         <img
           src={selectedToken.iconUrl}
@@ -79,7 +88,7 @@ export default function BubbleModal({
           { time: '2018-12-31', value: 22.67 },
         ]}
       />
-      <Swap selectedToken={selectedToken} />
+      <Swap selectedToken={selectedToken} onClose={onClose} />
     </Modal>
   )
 }

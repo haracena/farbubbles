@@ -1,8 +1,25 @@
-"use client";
-import { ReactNode } from "react";
-import { base } from "wagmi/chains";
-import { OnchainKitProvider } from "@coinbase/onchainkit";
-import "@coinbase/onchainkit/styles.css";
+'use client'
+import { ReactNode } from 'react'
+import { base } from 'wagmi/chains'
+import { OnchainKitProvider } from '@coinbase/onchainkit'
+import { WagmiProvider, createConfig, http } from 'wagmi'
+import '@coinbase/onchainkit/styles.css'
+import { coinbaseWallet } from 'wagmi/connectors'
+import { farcasterMiniApp as miniAppConnector } from '@farcaster/miniapp-wagmi-connector'
+
+const wagmiConfig = createConfig({
+  chains: [base],
+  connectors: [
+    miniAppConnector(),
+    coinbaseWallet({
+      appName: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME || 'spotlight',
+    }),
+  ],
+  ssr: true,
+  transports: {
+    [base.id]: http(),
+  },
+})
 
 export function RootProvider({ children }: { children: ReactNode }) {
   return (
@@ -11,11 +28,11 @@ export function RootProvider({ children }: { children: ReactNode }) {
       chain={base}
       config={{
         appearance: {
-          mode: "auto",
+          mode: 'auto',
         },
         wallet: {
-          display: "modal",
-          preference: "all",
+          display: 'modal',
+          preference: 'all',
         },
       }}
       miniKit={{
@@ -24,7 +41,7 @@ export function RootProvider({ children }: { children: ReactNode }) {
         notificationProxyUrl: undefined,
       }}
     >
-      {children}
+      <WagmiProvider config={wagmiConfig}>{children}</WagmiProvider>
     </OnchainKitProvider>
-  );
+  )
 }
