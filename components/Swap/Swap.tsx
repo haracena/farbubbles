@@ -1,9 +1,11 @@
 import { Token } from '@/interfaces/Token'
 import { mockTokens } from '@/mock/tokens'
-import { ArrowDownUp } from 'lucide-react'
-import { useState } from 'react'
+import { ArrowDownUp, Loader } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { useAccount, useConnect } from 'wagmi'
 import { useTokenBalance } from '@/hooks/useTokenBalances'
+import { useDebounce } from '@uidotdev/usehooks'
+import { parseUnits, formatUnits } from 'viem'
 
 interface SwapProps {
   selectedToken: Token
@@ -13,12 +15,88 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
   const [sellToken, setSellToken] = useState(mockTokens[1])
   const [buyToken, setBuyToken] = useState(selectedToken)
   const [rotateChangeButton, setRotateChangeButton] = useState(0)
+  const [sellAmount, setSellAmount] = useState('')
+  const [buyAmount, setBuyAmount] = useState('')
+  const [isLoadingPrice, setIsLoadingPrice] = useState(false)
   const { isConnected } = useAccount()
   const { connect, connectors } = useConnect()
   const { balance: sellTokenBalance, isLoading: isLoadingSellBalance } =
     useTokenBalance(sellToken)
   const { balance: buyTokenBalance, isLoading: isLoadingBuyBalance } =
     useTokenBalance(buyToken)
+
+  // Debounce del sellAmount
+  const debouncedSellAmount = useDebounce(sellAmount, 600)
+
+  // Consultar precio cuando cambie el valor debounced o los tokens
+  useEffect(() => {
+    const fetchPrice = async () => {
+      if (
+        !debouncedSellAmount ||
+        parseFloat(debouncedSellAmount) <= 0 ||
+        !sellToken.address ||
+        !buyToken.address
+      ) {
+        setBuyAmount('')
+        return
+      }
+
+      setIsLoadingPrice(true)
+      try {
+        // Convertir el sellAmount a wei (usando 18 decimales por defecto, o los decimales del token si están disponibles)
+        const sellTokenDecimals = sellTokenBalance?.decimals || 18
+        let sellAmountInWei
+        try {
+          sellAmountInWei = parseUnits(debouncedSellAmount, sellTokenDecimals)
+        } catch {
+          // Si falla la conversión (número inválido), limpiar el buyAmount
+          setBuyAmount('')
+          setIsLoadingPrice(false)
+          return
+        }
+
+        const params = new URLSearchParams({
+          chainId: '8453', // Base chain
+          buyToken: buyToken.address,
+          sellToken: sellToken.address,
+          sellAmount: sellAmountInWei.toString(),
+        })
+
+        const response = await fetch(`/api/token/price?${params.toString()}`)
+        const data = await response.json()
+
+        if (data.buyAmount) {
+          // Convertir de wei a unidades normales (usando los decimales del buyToken)
+          const buyTokenDecimals = buyTokenBalance?.decimals || 18
+          const buyAmountBigInt = BigInt(data.buyAmount)
+          const buyAmountFormatted = formatUnits(
+            buyAmountBigInt,
+            buyTokenDecimals,
+          )
+          // Limitar a 6 decimales y remover ceros al final
+          const formatted = parseFloat(buyAmountFormatted)
+            .toFixed(6)
+            .replace(/\.?0+$/, '')
+          setBuyAmount(formatted)
+        } else {
+          setBuyAmount('')
+        }
+      } catch (error) {
+        console.error('Error fetching price:', error)
+        setBuyAmount('')
+      } finally {
+        setIsLoadingPrice(false)
+      }
+    }
+
+    fetchPrice()
+  }, [
+    debouncedSellAmount,
+    sellToken.address,
+    buyToken.address,
+    sellTokenBalance?.decimals,
+    buyTokenBalance?.decimals,
+  ])
 
   console.log(sellTokenBalance)
   console.log(buyTokenBalance)
@@ -30,8 +108,13 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
       }
       return 0
     })
-    setSellToken((prev) => (prev === sellToken ? buyToken : sellToken))
-    setBuyToken((prev) => (prev === buyToken ? sellToken : buyToken))
+    // Intercambiar tokens
+    const tempToken = sellToken
+    setSellToken(buyToken)
+    setBuyToken(tempToken)
+    // Limpiar las cantidades al intercambiar
+    setSellAmount('')
+    setBuyAmount('')
   }
   return (
     <div className="grid grid-cols-1 gap-2">
@@ -50,6 +133,11 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
             className="w-full text-end text-3xl font-medium focus:outline-none"
             type="text"
             placeholder="0.00"
+            value={sellAmount}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9.]/g, '')
+              setSellAmount(value)
+            }}
           />
         </div>
         <div className="mt-2 flex items-center justify-between">
@@ -78,9 +166,13 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
         onClick={handleChangeButtonClick}
         className="botom-0 relative left-1/2 z-20 -mt-5 w-fit -translate-x-1/2 cursor-pointer rounded-lg border border-white/20 bg-neutral-700/90 p-2 shadow-md backdrop-blur-md"
       >
-        <ArrowDownUp
-          className={`size-4 text-white transition-transform duration-300 ease-in-out ${rotateChangeButton === 180 ? 'rotate-180' : 'rotate-0'}`}
-        />
+        {isLoadingPrice ? (
+          <Loader className="size-4 animate-spin text-white duration-300" />
+        ) : (
+          <ArrowDownUp
+            className={`size-4 text-white transition-transform duration-300 ease-in-out ${rotateChangeButton === 180 ? 'rotate-180' : 'rotate-0'}`}
+          />
+        )}
       </div>
       <div className="relative -mt-5 rounded-lg border border-white/20 bg-white/10 p-2 shadow-md backdrop-blur-md">
         <p className="mb-2 text-xs text-neutral-300">You receive</p>
@@ -94,9 +186,11 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
             <span className="font-regular text-2xl">{buyToken.symbol}</span>
           </div>
           <input
-            className="w-full text-end text-3xl font-medium focus:outline-none"
+            className={`w-full text-end text-3xl font-medium focus:outline-none ${isLoadingPrice ? 'animate-pulse' : ''}`}
             type="text"
             placeholder="0.00"
+            value={isLoadingPrice ? '...' : buyAmount}
+            readOnly
           />
         </div>
         <div className="mt-2 flex items-center justify-between">
