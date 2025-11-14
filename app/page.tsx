@@ -1,39 +1,21 @@
-"use client";
-import { useEffect, useState } from "react";
-import { useMiniKit } from "@coinbase/onchainkit/minikit";
-import BubblesContainer from "@/components/Bubbles/BubblesContainer";
+'use client'
+import { useEffect, useState } from 'react'
+import { useMiniKit } from '@coinbase/onchainkit/minikit'
+import BubblesContainer from '@/components/Bubbles/BubblesContainer'
 
 export default function Home() {
-  const { isFrameReady, setFrameReady, context } = useMiniKit();
-  const [dimensions, setDimensions] = useState<{
-    width: number;
-    height: number;
-  } | null>(null);
+  const { isFrameReady, setFrameReady, context } = useMiniKit()
 
   // Initialize the  miniapp
   useEffect(() => {
     if (!isFrameReady) {
-      setFrameReady();
+      setFrameReady()
     }
-  }, [setFrameReady, isFrameReady]);
-
-  useEffect(() => {
-    function handleResize() {
-      setDimensions({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
-    }
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [setFrameReady, isFrameReady])
 
   return (
-    <div className="flex flex-col gap-8 w-full min-h-screen">
-      <div className="w-full h-screen">
-        <BubblesContainer maxBubbles={50} />
-      </div>
+    <div className="h-screen w-full pb-16">
+      <BubblesContainer maxBubbles={50} />
     </div>
-  );
+  )
 }

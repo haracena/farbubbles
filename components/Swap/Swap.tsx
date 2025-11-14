@@ -3,6 +3,7 @@ import { mockTokens } from '@/mock/tokens'
 import { ArrowDownUp } from 'lucide-react'
 import { useState } from 'react'
 import { useAccount, useConnect } from 'wagmi'
+import { useTokenBalance } from '@/hooks/useTokenBalances'
 
 interface SwapProps {
   selectedToken: Token
@@ -12,10 +13,15 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
   const [sellToken, setSellToken] = useState(mockTokens[1])
   const [buyToken, setBuyToken] = useState(selectedToken)
   const [rotateChangeButton, setRotateChangeButton] = useState(0)
-  const { address, isConnected } = useAccount()
+  const { isConnected } = useAccount()
   const { connect, connectors } = useConnect()
+  const { balance: sellTokenBalance, isLoading: isLoadingSellBalance } =
+    useTokenBalance(sellToken)
+  const { balance: buyTokenBalance, isLoading: isLoadingBuyBalance } =
+    useTokenBalance(buyToken)
 
-  console.log(address)
+  console.log(sellTokenBalance)
+  console.log(buyTokenBalance)
 
   const handleChangeButtonClick = () => {
     setRotateChangeButton((prev) => {
@@ -48,15 +54,24 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
         </div>
         <div className="mt-2 flex items-center justify-between">
           <p className="text-sm text-neutral-300">
-            Balance: <span className="text-neutral-100">100</span>
+            Balance:{' '}
+            <span className="text-neutral-100">
+              {isLoadingSellBalance
+                ? '...'
+                : sellTokenBalance?.formatted || '0.00'}
+            </span>
           </p>
-          <p className="text-sm text-neutral-300">
-            {new Intl.NumberFormat('en-US', {
-              style: 'currency',
-              currency: 'USD',
-              maximumFractionDigits: 2,
-            }).format(100)}
-          </p>
+          {sellTokenBalance && sellToken.price && (
+            <p className="text-sm text-neutral-300">
+              {new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                maximumFractionDigits: 2,
+              }).format(
+                parseFloat(sellTokenBalance.formatted) * sellToken.price,
+              )}
+            </p>
+          )}
         </div>
       </div>
       <div
@@ -86,15 +101,22 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
         </div>
         <div className="mt-2 flex items-center justify-between">
           <p className="text-sm text-neutral-300">
-            Balance: <span className="text-neutral-100">100</span>
+            Balance:{' '}
+            <span className="text-neutral-100">
+              {isLoadingBuyBalance
+                ? '...'
+                : buyTokenBalance?.formatted || '0.00'}
+            </span>
           </p>
-          <p className="text-sm text-neutral-300">
-            {new Intl.NumberFormat('en-US', {
-              style: 'currency',
-              currency: 'USD',
-              maximumFractionDigits: 2,
-            }).format(100)}
-          </p>
+          {buyTokenBalance && buyToken.price && (
+            <p className="text-sm text-neutral-300">
+              {new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                maximumFractionDigits: 2,
+              }).format(parseFloat(buyTokenBalance.formatted) * buyToken.price)}
+            </p>
+          )}
         </div>
       </div>
 
