@@ -1,7 +1,7 @@
 import { Token } from '@/interfaces/Token'
 import { mockTokens } from '@/mock/tokens'
-import { ArrowDownUp, Loader } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { ArrowDownUp, Loader, Maximize } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
 import { useAccount, useConnect } from 'wagmi'
 import { useTokenBalance } from '@/hooks/useTokenBalances'
 import { useDebounce } from '@uidotdev/usehooks'
@@ -27,10 +27,21 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
 
   // Debounce del sellAmount
   const debouncedSellAmount = useDebounce(sellAmount, 600)
+  // Ref para cancelar fetches en curso
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   // Consultar precio cuando cambie el valor debounced o los tokens
   useEffect(() => {
+    // Cancelar cualquier fetch anterior
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+
     const fetchPrice = async () => {
+      // Crear nuevo AbortController para este fetch
+      abortControllerRef.current = new AbortController()
+      const signal = abortControllerRef.current.signal
+
       if (
         !debouncedSellAmount ||
         parseFloat(debouncedSellAmount) <= 0 ||
@@ -38,6 +49,7 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
         !buyToken.address
       ) {
         setBuyAmount('')
+        setIsLoadingPrice(false)
         return
       }
 
@@ -62,8 +74,17 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
           sellAmount: sellAmountInWei.toString(),
         })
 
-        const response = await fetch(`/api/token/price?${params.toString()}`)
+        const response = await fetch(`/api/token/price?${params.toString()}`, {
+          signal,
+        })
+
+        // Verificar si el fetch fue cancelado
+        if (signal.aborted) {
+          return
+        }
+
         const data = await response.json()
+        console.log(data)
 
         if (data.buyAmount) {
           // Convertir de wei a unidades normales (usando los decimales del buyToken)
@@ -82,14 +103,31 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
           setBuyAmount('')
         }
       } catch (error) {
+        // Ignorar errores de cancelación (AbortError)
+        if (error instanceof Error && error.name === 'AbortError') {
+          return
+        }
         console.error('Error fetching price:', error)
         setBuyAmount('')
-      } finally {
         setIsLoadingPrice(false)
+      } finally {
+        // Solo actualizar loading si no fue cancelado
+        if (!signal.aborted) {
+          setIsLoadingPrice(false)
+        }
       }
     }
 
     fetchPrice()
+
+    // Cleanup: cancelar fetch si el componente se desmonta o las dependencias cambian
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+      }
+      // Asegurarse de resetear el loading cuando se cancela
+      setIsLoadingPrice(false)
+    }
   }, [
     debouncedSellAmount,
     sellToken.address,
@@ -98,28 +136,46 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
     buyTokenBalance?.decimals,
   ])
 
-  console.log(sellTokenBalance)
-  console.log(buyTokenBalance)
-
   const handleChangeButtonClick = () => {
+    // Cancelar cualquier fetch en curso
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+
+    // Limpiar las cantidades PRIMERO antes de cambiar los tokens
+    // Esto asegura que el debounce también se resetee
+    setSellAmount('')
+    setBuyAmount('')
+    setIsLoadingPrice(false)
+
+    // Intercambiar tokens
+    const tempToken = sellToken
+    setSellToken(buyToken)
+    setBuyToken(tempToken)
+
+    // Actualizar el botón de rotación
     setRotateChangeButton((prev) => {
       if (prev === 0) {
         return 180
       }
       return 0
     })
-    // Intercambiar tokens
-    const tempToken = sellToken
-    setSellToken(buyToken)
-    setBuyToken(tempToken)
-    // Limpiar las cantidades al intercambiar
-    setSellAmount('')
-    setBuyAmount('')
   }
+
   return (
     <div className="grid grid-cols-1 gap-2">
       <div className="relative rounded-lg border border-white/20 bg-white/10 p-2 shadow-md backdrop-blur-md">
-        <p className="mb-2 text-xs text-neutral-300">You pay</p>
+        <div className="flex items-center justify-between">
+          <p className="mb-2 text-xs text-neutral-300">You pay</p>
+          <button
+            onClick={() => {
+              setSellAmount(sellTokenBalance?.formatted || '0.00')
+            }}
+            className="cursor-pointer text-xs text-neutral-300 transition-colors duration-300 hover:text-neutral-50"
+          >
+            Max
+          </button>
+        </div>
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <img
@@ -130,7 +186,7 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
             <span className="font-regular text-2xl">{sellToken.symbol}</span>
           </div>
           <input
-            className="w-full text-end text-3xl font-medium focus:outline-none"
+            className={`w-full text-end text-3xl font-medium focus:outline-none ${sellTokenBalance && sellAmount && parseFloat(sellAmount) > parseFloat(sellTokenBalance.formatted) ? 'text-red-400' : 'text-neutral-100'}`}
             type="text"
             placeholder="0.00"
             value={sellAmount}
@@ -140,17 +196,27 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
             }}
           />
         </div>
-        <div className="mt-2 flex items-center justify-between">
+        <div className="mt-2 flex items-center gap-1">
           <p className="text-sm text-neutral-300">
             Balance:{' '}
-            <span className="text-neutral-100">
+            <span
+              onClick={() => {
+                setSellAmount(sellTokenBalance?.formatted || '0.00')
+              }}
+              className="cursor-pointer text-neutral-100 transition-colors duration-300 hover:text-neutral-50"
+            >
               {isLoadingSellBalance
                 ? '...'
                 : sellTokenBalance?.formatted || '0.00'}
             </span>
           </p>
-          {sellTokenBalance && sellToken.price && (
-            <p className="text-sm text-neutral-300">
+          {sellTokenBalance &&
+          sellAmount &&
+          parseFloat(sellAmount) > parseFloat(sellTokenBalance.formatted) ? (
+            <p className="ml-auto text-xs text-red-400">Insufficient balance</p>
+          ) : null}
+          {/* {sellTokenBalance && sellToken.price && (
+            <p className="-mb-[2px] text-xs text-neutral-300">
               {new Intl.NumberFormat('en-US', {
                 style: 'currency',
                 currency: 'USD',
@@ -159,7 +225,7 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
                 parseFloat(sellTokenBalance.formatted) * sellToken.price,
               )}
             </p>
-          )}
+          )} */}
         </div>
       </div>
       <div
@@ -193,7 +259,7 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
             readOnly
           />
         </div>
-        <div className="mt-2 flex items-center justify-between">
+        <div className="mt-2 flex items-center gap-1">
           <p className="text-sm text-neutral-300">
             Balance:{' '}
             <span className="text-neutral-100">
@@ -202,15 +268,15 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
                 : buyTokenBalance?.formatted || '0.00'}
             </span>
           </p>
-          {buyTokenBalance && buyToken.price && (
-            <p className="text-sm text-neutral-300">
+          {/* {buyTokenBalance && buyToken.price && (
+            <p className="-mb-[2px] text-xs text-neutral-300">
               {new Intl.NumberFormat('en-US', {
                 style: 'currency',
                 currency: 'USD',
                 maximumFractionDigits: 2,
               }).format(parseFloat(buyTokenBalance.formatted) * buyToken.price)}
             </p>
-          )}
+          )} */}
         </div>
       </div>
 
