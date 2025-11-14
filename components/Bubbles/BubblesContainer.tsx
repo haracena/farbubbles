@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Bubble from "./Bubble";
 import Matter, {
   Engine,
@@ -38,12 +38,25 @@ export default function BubblesContainer({
   const [bubbles, setBubbles] = useState<BubbleState[]>([]);
   const [selectedToken, setSelectedToken] = useState<Token | null>(null);
   const engineRef = useRef<Engine | null>(null);
-  const bodiesRef = useRef<Matter.Body[]>([]);
+  const bodiesRef = useRef<Body[]>([]);
   const animationFrameRef = useRef<number | undefined>(
     undefined as number | undefined
   );
   const containerRef = useRef<HTMLDivElement>(null);
+  const bubbleElementsRef = useRef<Map<number, HTMLDivElement>>(new Map());
+
   console.log(selectedToken);
+
+  // Registrar refs de las burbujas para poder actualizar su posición sin re-renderizar
+  const registerBubbleRef = useCallback((id: number) => {
+    return (node: HTMLDivElement | null) => {
+      if (node) {
+        bubbleElementsRef.current.set(id, node);
+      } else {
+        bubbleElementsRef.current.delete(id);
+      }
+    };
+  }, []);
 
   // Inicializar Matter.js y las burbujas
   useEffect(() => {
@@ -147,6 +160,22 @@ export default function BubblesContainer({
     bodiesRef.current = tokenBubbles.map((b) => b.body);
     World.add(engine.world, bodiesRef.current);
 
+    setBubbles(
+      tokenBubbles.map(({ token, body, size }) => ({
+        id: token.id,
+        size,
+        symbol: token.symbol,
+        name: token.name,
+        price: token.price,
+        change24h: token.change24h,
+        marketCap: token.marketCap,
+        volume24h: token.volume24h,
+        iconUrl: token.iconUrl,
+        x: body.position.x - size / 2,
+        y: body.position.y - size / 2,
+      }))
+    );
+
     // MouseConstraint para arrastrar burbujas
     if (containerRef.current) {
       const mouse = Mouse.create(containerRef.current);
@@ -172,21 +201,13 @@ export default function BubblesContainer({
         });
       });
       Engine.update(engine, 1000 / 60);
-      setBubbles(
-        tokenBubbles.map(({ token, body, size }) => ({
-          id: token.id,
-          size,
-          symbol: token.symbol,
-          name: token.name,
-          price: token.price,
-          change24h: token.change24h,
-          marketCap: token.marketCap,
-          volume24h: token.volume24h,
-          iconUrl: token.iconUrl,
-          x: body.position.x - size / 2,
-          y: body.position.y - size / 2,
-        }))
-      );
+      tokenBubbles.forEach(({ token, body, size }) => {
+        const node = bubbleElementsRef.current.get(token.id);
+        if (!node) return;
+        const xPos = body.position.x - size / 2;
+        const yPos = body.position.y - size / 2;
+        node.style.transform = `translate3d(${xPos}px, ${yPos}px, 0) scale(1)`;
+      });
       animationFrameRef.current = requestAnimationFrame(update);
     };
     update();
@@ -199,13 +220,12 @@ export default function BubblesContainer({
     };
   }, [maxBubbles]);
 
-  const handleBubbleClick = (bubbleId: number) => {
+  const handleBubbleClick = useCallback((bubbleId: number) => {
     const token = mockTokens.find((t) => t.id === bubbleId);
     if (token) {
       setSelectedToken(token);
-      console.log("Token seleccionado:", token);
     }
-  };
+  }, []);
 
   return (
     <div
@@ -219,12 +239,12 @@ export default function BubblesContainer({
           id={bubble.id}
           size={bubble.size}
           symbol={bubble.symbol}
-          price={bubble.price}
           change24h={bubble.change24h}
           iconUrl={bubble.iconUrl}
           x={bubble.x}
           y={bubble.y}
           onBubbleClick={handleBubbleClick}
+          ref={registerBubbleRef(bubble.id)}
         />
       ))}
 

@@ -30,7 +30,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex flex-col gap-8 w-full min-h-screen bg-neutral-900">
+    <div className="flex flex-col gap-8 w-full min-h-screen">
       <div className="w-full h-screen">
         <BubblesContainer maxBubbles={50} />
       </div>
