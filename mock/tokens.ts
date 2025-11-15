@@ -3,27 +3,27 @@ import { Token } from '@/interfaces/Token'
 export const mockTokens: Token[] = [
   {
     id: 1,
-    symbol: 'BTC',
-    name: 'Bitcoin',
+    symbol: 'QR',
+    name: 'QR coin',
     price: 67854.32,
     change24h: 2.15,
     marketCap: 1330000000000,
     volume24h: 35000000000,
     iconUrl:
-      'https://assets.coingecko.com/coins/images/1/large/bitcoin.png?1696501400',
-    address: '0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf',
+      'https://assets.coingecko.com/coins/images/66513/standard/_QR_white_circle__transparent_bg_%288%29.png?1757920856',
+    address: '0x2b5050f01d64fbb3e4ac44dc07f0732bfb5ecadf',
   },
   {
     id: 2,
-    symbol: 'ETH',
-    name: 'Ethereum',
+    symbol: 'REPLY',
+    name: 'Reply',
     price: 3521.67,
     change24h: 1.42,
     marketCap: 422000000000,
     volume24h: 19000000000,
     iconUrl:
-      'https://assets.coingecko.com/coins/images/279/large/ethereum.png?1696501628',
-    address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+      'https://assets.coingecko.com/coins/images/68819/standard/reply-200-white.png?1756647866',
+    address: '0x638a57267633b8bd9756de2e3a1e2de658b52b07',
   },
   {
     id: 891829,

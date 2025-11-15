@@ -1,7 +1,6 @@
-import { MAX_ALLOWANCE } from '@/blockchain/constants'
 import { Loader } from 'lucide-react'
 import { useEffect } from 'react'
-import { Address, erc20Abi } from 'viem'
+import { Address, erc20Abi, maxUint256 } from 'viem'
 import {
   useReadContract,
   useSimulateContract,
@@ -48,6 +47,7 @@ export default function ApproveOrReviewButton({
     args: [taker, spender!],
     query: {
       enabled: !!sellTokenAddress && !!taker && !!spender,
+      refetchInterval: false, // No refetch automático, solo manual
     },
   })
 
@@ -56,31 +56,35 @@ export default function ApproveOrReviewButton({
     address: sellTokenAddress,
     abi: erc20Abi,
     functionName: 'approve',
-    args: [spender!, MAX_ALLOWANCE],
+    args: [spender!, maxUint256],
     query: {
       enabled: !!sellTokenAddress && !!taker && !!spender,
     },
   })
 
   // Define useWriteContract for the 'approve' operation
-  const {
-    data: writeContractResult,
-    writeContractAsync: writeContract,
-    error,
-  } = useWriteContract()
+  const { data: writeContractResult, writeContractAsync: writeContract } =
+    useWriteContract()
 
   // useWaitForTransactionReceipt to wait for the approval transaction to complete
   const { data: approvalReceiptData, isLoading: isApproving } =
     useWaitForTransactionReceipt({
       hash: writeContractResult,
+      query: {
+        enabled: !!writeContractResult,
+      },
     })
 
   // Call `refetch` when the transaction succeeds
   useEffect(() => {
-    if (approvalReceiptData) {
-      refetchAllowance()
+    if (approvalReceiptData && writeContractResult) {
+      console.log('Approval transaction confirmed, refetching allowance')
+      // Esperar un poco para asegurarse de que el estado on-chain se actualizó
+      setTimeout(() => {
+        refetchAllowance()
+      }, 1000)
     }
-  }, [approvalReceiptData, refetchAllowance])
+  }, [approvalReceiptData, writeContractResult, refetchAllowance])
 
   // If price.issues.allowance is null/undefined, no approval needed (native ETH or already handled)
   const allowanceIssue = price?.issues?.allowance
@@ -119,14 +123,20 @@ export default function ApproveOrReviewButton({
         className="w-full rounded-lg bg-blue-500 p-2 text-white disabled:opacity-50"
         onClick={async () => {
           if (!spender) return
-          await writeContract({
-            abi: erc20Abi,
-            address: sellTokenAddress,
-            functionName: 'approve',
-            args: [spender, MAX_ALLOWANCE],
-          })
-          console.log('approving spender to spend sell token')
-          refetchAllowance()
+          try {
+            await writeContract({
+              abi: erc20Abi,
+              address: sellTokenAddress,
+              functionName: 'approve',
+              args: [spender, maxUint256],
+            })
+            console.log(
+              'Approval transaction sent, waiting for confirmation...',
+            )
+            // No refetch aquí, esperaremos a que useWaitForTransactionReceipt lo haga
+          } catch (error) {
+            console.error('Error approving token:', error)
+          }
         }}
       >
         {isApproving ? 'Approving…' : 'Approve'}
