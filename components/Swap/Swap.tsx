@@ -12,6 +12,7 @@ import { useDebounce } from '@uidotdev/usehooks'
 import { parseUnits, formatUnits, Address } from 'viem'
 import ApproveOrReviewButton from './ApproveOrReviewButton'
 import SwapReview from './SwapReview'
+import { formatAmount } from '@/lib/helpers'
 
 interface SwapProps {
   selectedToken: Token
@@ -128,10 +129,8 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
             buyAmountBigInt,
             buyTokenDecimals,
           )
-          // Limitar a 6 decimales y remover ceros al final
-          const formatted = parseFloat(buyAmountFormatted)
-            .toFixed(6)
-            .replace(/\.?0+$/, '')
+
+          const formatted = formatAmount(buyAmountFormatted)
           setBuyAmount(formatted)
           setPrice(data)
         } else {
@@ -394,7 +393,7 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
             >
               {isLoadingSellBalance
                 ? '...'
-                : sellTokenBalance?.formatted || '0.00'}
+                : formatAmount(sellTokenBalance?.formatted || '0.00')}
             </span>
           </p>
           {sellTokenBalance &&
@@ -452,7 +451,7 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
             <span className="text-neutral-100">
               {isLoadingBuyBalance
                 ? '...'
-                : buyTokenBalance?.formatted || '0.00'}
+                : formatAmount(buyTokenBalance?.formatted || '0.00')}
             </span>
           </p>
           {/* {buyTokenBalance && buyToken.price && (
