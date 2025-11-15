@@ -11,6 +11,7 @@ export const mockTokens: Token[] = [
     volume24h: 35000000000,
     iconUrl:
       'https://assets.coingecko.com/coins/images/1/large/bitcoin.png?1696501400',
+    address: '0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf',
   },
   {
     id: 2,
@@ -22,7 +23,19 @@ export const mockTokens: Token[] = [
     volume24h: 19000000000,
     iconUrl:
       'https://assets.coingecko.com/coins/images/279/large/ethereum.png?1696501628',
-    address: '0x4200000000000000000000000000000000000006', // WETH on Base
+    address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+  },
+  {
+    id: 891829,
+    symbol: 'ZORA',
+    name: 'Zora',
+    price: 3521.67,
+    change24h: 1.42,
+    marketCap: 422000000000,
+    volume24h: 19000000000,
+    iconUrl:
+      'https://assets.coingecko.com/coins/images/54693/standard/zora.jpg?1741094751',
+    address: '0x1111111111166b7fe7bd91427724b487980afc69',
   },
   {
     id: 3,
@@ -167,17 +180,6 @@ export const mockTokens: Token[] = [
     volume24h: 290000000,
     iconUrl:
       'https://assets.coingecko.com/coins/images/1481/large/cosmos_hub.png?1696502670',
-  },
-  {
-    id: 16,
-    symbol: 'APT',
-    name: 'Aptos',
-    price: 12.28,
-    change24h: 6.41,
-    marketCap: 4970000000,
-    volume24h: 410000000,
-    iconUrl:
-      'https://assets.coingecko.com/coins/images/26455/large/Aptos_Non-Gradient_Symbol_Black.png?1696525085',
   },
   {
     id: 17,

@@ -1,12 +1,17 @@
 import { Token } from '@/interfaces/Token'
-import { mockTokens } from '@/mock/tokens'
-import { ArrowDownUp, Loader, Maximize } from 'lucide-react'
+import { ArrowDownUp, Loader } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
-import { useAccount, useConnect } from 'wagmi'
+import {
+  useAccount,
+  useConnect,
+  useSendTransaction,
+  useWaitForTransactionReceipt,
+} from 'wagmi'
 import { useTokenBalance } from '@/hooks/useTokenBalances'
 import { useDebounce } from '@uidotdev/usehooks'
-import { parseUnits, formatUnits, erc20Abi } from 'viem'
+import { parseUnits, formatUnits, Address } from 'viem'
 import ApproveOrReviewButton from './ApproveOrReviewButton'
+import SwapReview from './SwapReview'
 
 interface SwapProps {
   selectedToken: Token
@@ -30,9 +35,21 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
   const [sellAmount, setSellAmount] = useState('')
   const [buyAmount, setBuyAmount] = useState('')
   const [isLoadingPrice, setIsLoadingPrice] = useState(false)
-  const [price, setPrice] = useState<any>(null)
+  const [price, setPrice] = useState<Record<string, unknown> | null>(null)
+  const [quote, setQuote] = useState<Record<string, unknown> | null>(null)
+  const [showReview, setShowReview] = useState(false)
+  const [isLoadingQuote, setIsLoadingQuote] = useState(false)
   const { isConnected, address } = useAccount()
   const { connect, connectors } = useConnect()
+
+  // Send transaction hook for executing swap
+  const { data: swapHash, sendTransactionAsync } = useSendTransaction()
+
+  // Wait for swap transaction receipt
+  const { data: swapReceipt, isLoading: isExecutingSwap } =
+    useWaitForTransactionReceipt({
+      hash: swapHash,
+    })
   const { balance: sellTokenBalance, isLoading: isLoadingSellBalance } =
     useTokenBalance(sellToken)
   const { balance: buyTokenBalance, isLoading: isLoadingBuyBalance } =
@@ -86,6 +103,10 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
           sellToken: sellToken.address,
           sellAmount: sellAmountInWei.toString(),
         })
+
+        if (address) {
+          params.append('taker', address)
+        }
 
         const response = await fetch(`/api/token/price?${params.toString()}`, {
           signal,
@@ -148,7 +169,149 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
     buyToken.address,
     sellTokenBalance?.decimals,
     buyTokenBalance?.decimals,
+    address,
   ])
+
+  // Fetch quote function
+  const fetchQuote = async () => {
+    if (!sellToken.address || !buyToken.address || !sellAmount || !address) {
+      return
+    }
+
+    setIsLoadingQuote(true)
+
+    try {
+      const sellTokenDecimals = sellTokenBalance?.decimals || 18
+      const sellAmountInWei = parseUnits(sellAmount, sellTokenDecimals)
+
+      const params = new URLSearchParams({
+        chainId: '8453',
+        buyToken: buyToken.address,
+        sellToken: sellToken.address,
+        sellAmount: sellAmountInWei.toString(),
+        taker: address,
+      })
+
+      const response = await fetch(`/api/token/quote?${params.toString()}`)
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Failed to fetch quote:', {
+          status: response.status,
+          error: errorData,
+        })
+        return
+      }
+
+      const data = await response.json()
+
+      console.log('Quote response:', data)
+
+      if (data.error) {
+        console.error('Quote API error:', data.error, data.details)
+        return
+      }
+
+      if (data.validationErrors && data.validationErrors.length > 0) {
+        console.error('Quote validation errors:', data.validationErrors)
+        return
+      }
+
+      // La API de 0x devuelve to y data dentro de transaction
+      if (!data.transaction || !data.transaction.to || !data.transaction.data) {
+        console.error('Quote missing required fields:', {
+          transaction: data.transaction,
+          to: data.transaction?.to,
+          data: data.transaction?.data,
+          fullResponse: data,
+          availableKeys: Object.keys(data),
+        })
+        return
+      }
+
+      setQuote(data)
+      setShowReview(true)
+    } catch (error) {
+      console.error('Error fetching quote:', error)
+    } finally {
+      setIsLoadingQuote(false)
+    }
+  }
+
+  // Execute swap function
+  const executeSwap = async () => {
+    console.log('Executing swap with quote:', quote)
+
+    if (!quote) {
+      console.error('No quote available')
+      return
+    }
+
+    // La API de 0x devuelve to, data y value dentro de transaction
+    const transaction = quote.transaction as
+      | {
+          to?: string
+          data?: string
+          value?: string
+          gas?: string
+        }
+      | undefined
+
+    if (!transaction) {
+      console.error('Quote missing transaction object')
+      return
+    }
+
+    const quoteTo = transaction.to
+    const quoteData = transaction.data
+    const quoteValue = transaction.value
+
+    console.log('Quote values:', {
+      to: quoteTo,
+      data: quoteData ? `${quoteData.substring(0, 20)}...` : 'missing',
+      value: quoteValue,
+    })
+
+    if (!quoteTo || !quoteData) {
+      console.error('Invalid quote data - missing to or data:', {
+        to: quoteTo,
+        data: quoteData,
+        transactionKeys: Object.keys(transaction),
+      })
+      return
+    }
+
+    try {
+      const value = quoteValue ? BigInt(quoteValue) : BigInt(0)
+
+      console.log('Sending transaction:', {
+        to: quoteTo,
+        dataLength: quoteData.length,
+        value: value.toString(),
+      })
+
+      await sendTransactionAsync({
+        to: quoteTo as Address,
+        data: quoteData as `0x${string}`,
+        value,
+      })
+      setShowReview(false)
+    } catch (error) {
+      console.error('Error executing swap:', error)
+    }
+  }
+
+  // Handle swap success
+  useEffect(() => {
+    if (swapReceipt) {
+      console.log('Swap executed successfully:', swapReceipt)
+      // Reset form or show success message
+      setSellAmount('')
+      setBuyAmount('')
+      setQuote(null)
+      setPrice(null)
+    }
+  }, [swapReceipt])
 
   const handleChangeButtonClick = () => {
     // Cancelar cualquier fetch en curso
@@ -163,9 +326,19 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
     setIsLoadingPrice(false)
 
     // Intercambiar tokens
-    const tempToken = sellToken
-    setSellToken(buyToken)
-    setBuyToken(tempToken)
+    const tempSellToken = sellToken
+    setSellToken({
+      ...buyToken,
+      address:
+        buyToken.address ||
+        ('0x0000000000000000000000000000000000000000' as `0x${string}`),
+    } as typeof sellToken)
+    setBuyToken({
+      ...tempSellToken,
+      address:
+        tempSellToken.address ||
+        ('0x0000000000000000000000000000000000000000' as `0x${string}`),
+    } as typeof buyToken)
 
     // Actualizar el botón de rotación
     setRotateChangeButton((prev) => {
@@ -294,12 +467,6 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
         </div>
       </div>
 
-      <div className="display flex items-center text-xs text-neutral-300">
-        <p>0.3% swap fee</p>
-        {/* <p>0.15% 0x fees</p> */}
-        {/* <p>0.15% platform fees</p> */}
-      </div>
-
       <div className="mt-2 grid grid-cols-2 gap-2">
         <button
           onClick={() => onClose?.()}
@@ -314,24 +481,47 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
           >
             Connect
           </button>
-        ) : price ? (
+        ) : price && address ? (
           <ApproveOrReviewButton
             price={price}
             sellTokenAddress={
               sellToken.address || '0x0000000000000000000000000000000000000000'
             }
-            taker={address || '0x0000000000000000000000000000000000000000'}
-            onClick={() => {}}
+            taker={address}
+            onClick={fetchQuote}
+            isLoading={isLoadingQuote}
+            disabled={
+              isLoadingQuote ||
+              !sellAmount ||
+              parseFloat(sellAmount) <= 0 ||
+              !!(
+                sellTokenBalance &&
+                parseFloat(sellAmount) > parseFloat(sellTokenBalance.formatted)
+              )
+            }
           />
         ) : (
           <button
-            className="rounded-lg bg-blue-500 p-2 text-white"
+            className="rounded-lg bg-blue-500 p-2 text-white disabled:opacity-50"
             disabled={true}
           >
             Review Trade
           </button>
         )}
       </div>
+
+      {/* Swap Review Modal */}
+      <SwapReview
+        isOpen={showReview}
+        onClose={() => setShowReview(false)}
+        onConfirm={executeSwap}
+        quote={quote}
+        sellToken={sellToken}
+        buyToken={buyToken}
+        sellAmount={sellAmount}
+        buyAmount={buyAmount}
+        isLoading={isExecutingSwap}
+      />
     </div>
   )
 }

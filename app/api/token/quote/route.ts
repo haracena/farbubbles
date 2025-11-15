@@ -32,14 +32,37 @@ export async function GET(request: Request) {
     params.append('taker', taker)
   }
 
-  const priceResponse = await fetch(
-    `https://api.0x.org/swap/allowance-holder/price?${params.toString()}`,
-    {
-      headers,
-    },
-  )
+  try {
+    const quoteResponse = await fetch(
+      `https://api.0x.org/swap/allowance-holder/quote?${params.toString()}`,
+      {
+        headers,
+      },
+    )
 
-  const priceData = await priceResponse.json()
+    if (!quoteResponse.ok) {
+      const errorData = await quoteResponse.json().catch(() => ({}))
+      console.error('0x API error:', {
+        status: quoteResponse.status,
+        statusText: quoteResponse.statusText,
+        error: errorData,
+      })
+      return NextResponse.json(
+        { error: 'Failed to fetch quote', details: errorData },
+        { status: quoteResponse.status },
+      )
+    }
 
-  return NextResponse.json(priceData)
+    const quoteData = await quoteResponse.json()
+    return NextResponse.json(quoteData)
+  } catch (error) {
+    console.error('Error fetching quote:', error)
+    return NextResponse.json(
+      {
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 },
+    )
+  }
 }
