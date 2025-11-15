@@ -335,19 +335,13 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
         buyTokenSymbol: buyToken.symbol,
       }
 
-      // Mostrar toast de carga
-      // const loadingToast = toast.loading('Transaction pending', {
-      //   description: 'Your swap transaction is being processed...',
-      // })
-
       await sendTransactionAsync({
         to: quoteTo as Address,
         data: quoteData as `0x${string}`,
         value,
       })
 
-      // Dismiss loading toast y cerrar modal
-      toast.dismiss(loadingToast)
+      // Cerrar modal
       setShowReview(false)
 
       // Mostrar toast de confirmación en progreso
@@ -406,14 +400,26 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
     }
   }, [swapReceipt])
 
-  // Handle swap error
+  // Handle swap error (solo si NO hay un receipt exitoso)
   useEffect(() => {
-    if (isSwapError && swapError) {
+    // Solo mostrar error si:
+    // 1. Hay un error
+    // 2. NO hay un receipt exitoso (o el receipt no es success)
+    // 3. Tenemos un swapHash (para evitar errores de otros estados)
+    if (
+      isSwapError &&
+      swapError &&
+      swapHash &&
+      (!swapReceipt || swapReceipt.status !== 'success')
+    ) {
       // Crear una clave única para este error basada en el hash de la transacción
-      const errorKey = swapHash ? `error-${swapHash}` : `error-${Date.now()}`
+      const errorKey = `error-${swapHash}`
 
-      // Verificar si ya procesamos este error
-      if (processedReceiptRef.current === errorKey) {
+      // Verificar si ya procesamos este error o si ya tenemos un receipt exitoso
+      if (
+        processedReceiptRef.current === errorKey ||
+        processedReceiptRef.current?.includes(swapHash)
+      ) {
         return
       }
 
@@ -429,7 +435,7 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
         duration: 5000,
       })
     }
-  }, [isSwapError, swapError, swapHash])
+  }, [isSwapError, swapError, swapHash, swapReceipt])
 
   const handleChangeButtonClick = () => {
     // Cancelar cualquier fetch en curso
