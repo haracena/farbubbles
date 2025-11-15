@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
+  const swapFeeRecipient = '0x467051A5c4BD354fC0ca9fC1ed11Bf7F8F035730'
+  const swapFeeBps = 15
 
   const chainId = searchParams.get('chainId')
   const buyToken = searchParams.get('buyToken')
@@ -17,7 +19,7 @@ export async function GET(request: Request) {
   }
 
   const priceResponse = await fetch(
-    `https://api.0x.org/swap/allowance-holder/price?chainId=${BASE_ID}&buyToken=${buyToken}&sellToken=${sellToken}&sellAmount=${sellAmount}`,
+    `https://api.0x.org/swap/allowance-holder/price?chainId=${BASE_ID}&buyToken=${buyToken}&sellToken=${sellToken}&sellAmount=${sellAmount}&swapFeeRecipient=${swapFeeRecipient}&swapFeeBps=${swapFeeBps}`,
     {
       headers,
     },

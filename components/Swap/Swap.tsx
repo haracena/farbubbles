@@ -5,20 +5,33 @@ import { useState, useEffect, useRef } from 'react'
 import { useAccount, useConnect } from 'wagmi'
 import { useTokenBalance } from '@/hooks/useTokenBalances'
 import { useDebounce } from '@uidotdev/usehooks'
-import { parseUnits, formatUnits } from 'viem'
+import { parseUnits, formatUnits, erc20Abi } from 'viem'
+import ApproveOrReviewButton from './ApproveOrReviewButton'
 
 interface SwapProps {
   selectedToken: Token
   onClose?: () => void
 }
 export default function Swap({ selectedToken, onClose }: SwapProps) {
-  const [sellToken, setSellToken] = useState(mockTokens[1])
+  const [sellToken, setSellToken] = useState({
+    id: 0, // o el siguiente ID disponible
+    symbol: 'USDC',
+    name: 'USD Coin',
+    price: 1.0, // USDC es un stablecoin, siempre cerca de $1
+    change24h: 0.0, // Los stablecoins suelen tener cambio mínimo
+    marketCap: 28000000000000, // Market cap aproximado de USDC total
+    volume24h: 8000000000, // Volumen 24h aproximado
+    iconUrl:
+      'https://assets.coingecko.com/coins/images/6319/large/USD_Coin_icon.png?1696501939',
+    address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as `0x${string}`, // USDC en Base
+  })
   const [buyToken, setBuyToken] = useState(selectedToken)
   const [rotateChangeButton, setRotateChangeButton] = useState(0)
   const [sellAmount, setSellAmount] = useState('')
   const [buyAmount, setBuyAmount] = useState('')
   const [isLoadingPrice, setIsLoadingPrice] = useState(false)
-  const { isConnected } = useAccount()
+  const [price, setPrice] = useState<any>(null)
+  const { isConnected, address } = useAccount()
   const { connect, connectors } = useConnect()
   const { balance: sellTokenBalance, isLoading: isLoadingSellBalance } =
     useTokenBalance(sellToken)
@@ -99,6 +112,7 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
             .toFixed(6)
             .replace(/\.?0+$/, '')
           setBuyAmount(formatted)
+          setPrice(data)
         } else {
           setBuyAmount('')
         }
@@ -280,23 +294,41 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="display flex items-center text-xs text-neutral-300">
+        <p>0.3% swap fee</p>
+        {/* <p>0.15% 0x fees</p> */}
+        {/* <p>0.15% platform fees</p> */}
+      </div>
+
+      <div className="mt-2 grid grid-cols-2 gap-2">
         <button
           onClick={() => onClose?.()}
-          className="mt-2 rounded-lg bg-neutral-700/90 p-2 text-white"
+          className="rounded-lg bg-neutral-700/90 p-2 text-white"
         >
           Close
         </button>
         {!isConnected ? (
           <button
-            className="mt-2 rounded-lg bg-blue-500 p-2 text-white"
+            className="rounded-lg bg-blue-500 p-2 text-white"
             onClick={() => connect({ connector: connectors[0] })}
           >
             Connect
           </button>
+        ) : price ? (
+          <ApproveOrReviewButton
+            price={price}
+            sellTokenAddress={
+              sellToken.address || '0x0000000000000000000000000000000000000000'
+            }
+            taker={address || '0x0000000000000000000000000000000000000000'}
+            onClick={() => {}}
+          />
         ) : (
-          <button className="mt-2 rounded-lg bg-blue-500 p-2 text-white">
-            Swap
+          <button
+            className="rounded-lg bg-blue-500 p-2 text-white"
+            disabled={true}
+          >
+            Review Trade
           </button>
         )}
       </div>
