@@ -3,6 +3,7 @@ import { Inter, Source_Code_Pro } from 'next/font/google'
 import { SafeArea } from '@coinbase/onchainkit/minikit'
 import { minikitConfig } from '../minikit.config'
 import { RootProvider } from './rootProvider'
+import { Toaster } from '@/components/ui/sonner'
 import './globals.css'
 import TabBar from '@/components/TabBar/TabBar'
 
@@ -43,13 +44,14 @@ export default function RootLayout({
 }>) {
   return (
     <RootProvider>
-      <html lang="en">
+      <html lang="en" className="dark">
         <body
           className={`${inter.variable} ${sourceCodePro.variable} bg-neutral-900`}
         >
           <SafeArea>
             {children}
             <TabBar />
+            <Toaster />
           </SafeArea>
         </body>
       </html>

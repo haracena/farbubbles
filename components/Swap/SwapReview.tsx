@@ -84,7 +84,7 @@ export default function SwapReview({
                 <span className="text-neutral-100">0.15%</span> Agregator fee
               </p>
               <p className="text-xs text-neutral-400">
-                <span className="text-neutral-100">0%</span> platform fee
+                <span className="text-neutral-100">0%</span> Platform fee
                 (November)
               </p>
             </div>

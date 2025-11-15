@@ -10,6 +10,7 @@ import {
 import { useTokenBalance } from '@/hooks/useTokenBalances'
 import { useDebounce } from '@uidotdev/usehooks'
 import { parseUnits, formatUnits, Address } from 'viem'
+import { toast } from 'sonner'
 import ApproveOrReviewButton from './ApproveOrReviewButton'
 import SwapReview from './SwapReview'
 import { formatAmount } from '@/lib/helpers'
@@ -47,10 +48,14 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
   const { data: swapHash, sendTransactionAsync } = useSendTransaction()
 
   // Wait for swap transaction receipt
-  const { data: swapReceipt, isLoading: isExecutingSwap } =
-    useWaitForTransactionReceipt({
-      hash: swapHash,
-    })
+  const {
+    data: swapReceipt,
+    isLoading: isExecutingSwap,
+    error: swapError,
+    isError: isSwapError,
+  } = useWaitForTransactionReceipt({
+    hash: swapHash,
+  })
   const { balance: sellTokenBalance, isLoading: isLoadingSellBalance } =
     useTokenBalance(sellToken)
   const { balance: buyTokenBalance, isLoading: isLoadingBuyBalance } =
@@ -60,6 +65,15 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
   const debouncedSellAmount = useDebounce(sellAmount, 600)
   // Ref para cancelar fetches en curso
   const abortControllerRef = useRef<AbortController | null>(null)
+  // Ref para rastrear si ya se mostró el toast de éxito para un receipt específico
+  const processedReceiptRef = useRef<string | null>(null)
+  // Ref para guardar los valores del swap cuando se envía la transacción
+  const swapValuesRef = useRef<{
+    sellAmount: string
+    buyAmount: string
+    sellTokenSymbol: string
+    buyTokenSymbol: string
+  } | null>(null)
 
   // Consultar precio cuando cambie el valor debounced o los tokens
   useEffect(() => {
@@ -199,6 +213,9 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
           status: response.status,
           error: errorData,
         })
+        toast.error('Failed to get quote', {
+          description: 'Unable to fetch swap quote. Please try again.',
+        })
         return
       }
 
@@ -208,11 +225,17 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
 
       if (data.error) {
         console.error('Quote API error:', data.error, data.details)
+        toast.error('Quote error', {
+          description: 'Failed to get quote. Please try again.',
+        })
         return
       }
 
       if (data.validationErrors && data.validationErrors.length > 0) {
         console.error('Quote validation errors:', data.validationErrors)
+        toast.error('Invalid quote', {
+          description: 'Quote validation failed. Please check your inputs.',
+        })
         return
       }
 
@@ -225,6 +248,9 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
           fullResponse: data,
           availableKeys: Object.keys(data),
         })
+        toast.error('Invalid quote', {
+          description: 'Quote data is incomplete. Please try again.',
+        })
         return
       }
 
@@ -232,6 +258,9 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
       setShowReview(true)
     } catch (error) {
       console.error('Error fetching quote:', error)
+      toast.error('Error fetching quote', {
+        description: 'Failed to fetch quote. Please try again.',
+      })
     } finally {
       setIsLoadingQuote(false)
     }
@@ -243,6 +272,9 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
 
     if (!quote) {
       console.error('No quote available')
+      toast.error('Error', {
+        description: 'No quote available. Please try again.',
+      })
       return
     }
 
@@ -258,6 +290,9 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
 
     if (!transaction) {
       console.error('Quote missing transaction object')
+      toast.error('Error', {
+        description: 'Invalid quote data. Please try again.',
+      })
       return
     }
 
@@ -277,6 +312,9 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
         data: quoteData,
         transactionKeys: Object.keys(transaction),
       })
+      toast.error('Error', {
+        description: 'Invalid transaction data. Please try again.',
+      })
       return
     }
 
@@ -289,28 +327,109 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
         value: value.toString(),
       })
 
+      // Guardar los valores del swap antes de enviar la transacción
+      swapValuesRef.current = {
+        sellAmount,
+        buyAmount,
+        sellTokenSymbol: sellToken.symbol,
+        buyTokenSymbol: buyToken.symbol,
+      }
+
+      // Mostrar toast de carga
+      // const loadingToast = toast.loading('Transaction pending', {
+      //   description: 'Your swap transaction is being processed...',
+      // })
+
       await sendTransactionAsync({
         to: quoteTo as Address,
         data: quoteData as `0x${string}`,
         value,
       })
+
+      // Dismiss loading toast y cerrar modal
+      toast.dismiss(loadingToast)
       setShowReview(false)
+
+      // Mostrar toast de confirmación en progreso
+      toast.info('Transaction submitted', {
+        description: 'Waiting for confirmation on the blockchain...',
+      })
     } catch (error) {
       console.error('Error executing swap:', error)
+      toast.error('Transaction failed', {
+        description: 'Failed to execute swap. Please try again.',
+      })
     }
   }
 
   // Handle swap success
   useEffect(() => {
     if (swapReceipt) {
-      console.log('Swap executed successfully:', swapReceipt)
-      // Reset form or show success message
-      setSellAmount('')
-      setBuyAmount('')
-      setQuote(null)
-      setPrice(null)
+      // Crear una clave única para este receipt
+      const receiptKey = `${swapReceipt.transactionHash}-${swapReceipt.status}`
+
+      // Verificar si ya procesamos este receipt
+      if (processedReceiptRef.current === receiptKey) {
+        return
+      }
+
+      // Marcar este receipt como procesado
+      processedReceiptRef.current = receiptKey
+
+      // Verificar si la transacción fue exitosa
+      if (swapReceipt.status === 'success') {
+        console.log('Swap executed successfully:', swapReceipt)
+
+        // Usar los valores guardados al momento del swap
+        const values = swapValuesRef.current
+        if (values) {
+          // Mostrar toast de éxito
+          toast.success('Swap completed!', {
+            description: `Successfully swapped ${formatAmount(values.sellAmount)} ${values.sellTokenSymbol} for ${formatAmount(values.buyAmount)} ${values.buyTokenSymbol}`,
+            duration: 5000,
+          })
+        }
+
+        // Reset form
+        setSellAmount('')
+        setBuyAmount('')
+        setQuote(null)
+        setPrice(null)
+        swapValuesRef.current = null
+      } else if (swapReceipt.status === 'reverted') {
+        // La transacción fue revertida
+        toast.error('Transaction failed', {
+          description: 'The swap transaction was reverted. Please try again.',
+          duration: 5000,
+        })
+      }
     }
   }, [swapReceipt])
+
+  // Handle swap error
+  useEffect(() => {
+    if (isSwapError && swapError) {
+      // Crear una clave única para este error basada en el hash de la transacción
+      const errorKey = swapHash ? `error-${swapHash}` : `error-${Date.now()}`
+
+      // Verificar si ya procesamos este error
+      if (processedReceiptRef.current === errorKey) {
+        return
+      }
+
+      // Marcar este error como procesado
+      processedReceiptRef.current = errorKey
+
+      console.error('Swap transaction error:', swapError)
+      toast.error('Transaction error', {
+        description:
+          swapError instanceof Error
+            ? swapError.message
+            : 'Transaction failed. Please try again.',
+        duration: 5000,
+      })
+    }
+  }, [isSwapError, swapError, swapHash])
 
   const handleChangeButtonClick = () => {
     // Cancelar cualquier fetch en curso
