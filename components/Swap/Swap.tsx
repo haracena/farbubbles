@@ -474,7 +474,7 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
 
   return (
     <div className="grid grid-cols-1 gap-2">
-      <div className="relative rounded-lg border border-white/20 bg-white/10 p-2 shadow-md backdrop-blur-md">
+      <div className="relative rounded-lg border border-white/20 bg-white/10 p-2 shadow-md">
         <div className="flex items-center justify-between">
           <p className="mb-2 text-xs text-neutral-300">You pay</p>
           <button
@@ -541,7 +541,7 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
       </div>
       <div
         onClick={handleChangeButtonClick}
-        className="botom-0 relative left-1/2 z-20 -mt-5 w-fit -translate-x-1/2 cursor-pointer rounded-lg border border-white/20 bg-neutral-700/90 p-2 shadow-md backdrop-blur-md"
+        className="botom-0 relative left-1/2 z-20 -mt-5 w-fit -translate-x-1/2 cursor-pointer rounded-lg border border-white/20 bg-neutral-700/90 p-2 shadow-md"
       >
         {isLoadingPrice ? (
           <Loader className="size-4 animate-spin text-white duration-300" />
@@ -551,7 +551,7 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
           />
         )}
       </div>
-      <div className="relative -mt-5 rounded-lg border border-white/20 bg-white/10 p-2 shadow-md backdrop-blur-md">
+      <div className="relative -mt-5 rounded-lg border border-white/20 bg-white/10 p-2 shadow-md">
         <p className="mb-2 text-xs text-neutral-300">You receive</p>
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">

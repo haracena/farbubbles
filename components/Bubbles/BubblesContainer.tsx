@@ -44,6 +44,7 @@ export default function BubblesContainer({
   )
   const containerRef = useRef<HTMLDivElement>(null)
   const bubbleElementsRef = useRef<Map<string, HTMLDivElement>>(new Map())
+  const isPausedRef = useRef<boolean>(false)
 
   console.log(selectedToken)
 
@@ -196,6 +197,12 @@ export default function BubblesContainer({
 
     // Animar y sincronizar con React
     const update = () => {
+      // Pausar animación si el modal está abierto
+      if (isPausedRef.current) {
+        animationFrameRef.current = requestAnimationFrame(update)
+        return
+      }
+
       // Movimiento constante: fuerza aleatoria independiente para cada burbuja
       const forceMagnitude = 0.12 // fuerza reducida para movimientos más lentos
       bodiesRef.current.forEach((body) => {
@@ -224,6 +231,11 @@ export default function BubblesContainer({
       Engine.clear(engine)
     }
   }, [maxBubbles])
+
+  // Efecto para pausar/reanudar animación cuando el modal se abre/cierra
+  useEffect(() => {
+    isPausedRef.current = selectedToken !== null
+  }, [selectedToken])
 
   const handleBubbleClick = useCallback((bubbleId: string) => {
     const token = mockTokens.find((t) => t.id === bubbleId)

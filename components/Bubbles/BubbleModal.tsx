@@ -16,7 +16,7 @@ export default function BubbleModal({
   const { disconnect } = useDisconnect()
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="mt-0 w-[95vw] max-w-none space-y-3 rounded-lg border border-white/20 bg-white/10 p-4 text-white backdrop-blur-md sm:rounded-lg">
+      <DialogContent className="mt-0 w-[95vw] max-w-none space-y-3 rounded-lg border border-white/20 bg-neutral-800/90 p-4 text-white sm:rounded-lg">
         {/* <button onClick={onClose} className="absolute top-5 right-4">
         <X className="size-4" />
       </button> */}

@@ -54,14 +54,14 @@ const Bubble = forwardRef<HTMLDivElement, BubbleProps>(
         onPointerUp={handlePointerUp}
       >
         <div
-          className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full shadow-lg backdrop-blur-sm transition-transform duration-300 ease-out"
+          className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full transition-transform duration-300 ease-out"
           style={{
-            background: `radial-gradient(circle at 30% 30%, ${glowColor}55, ${baseColor}35)`,
+            background: `radial-gradient(circle at 30% 30%, ${glowColor}75, ${baseColor}55)`,
             border: `2px solid ${glowColor}30`,
-            boxShadow: `
-            inset 0 0 20px ${glowColor}25,
-            0 0 25px ${baseColor}30
-          `,
+            //   boxShadow: `
+            //   inset 0 0 20px ${glowColor}25,
+            //   0 0 25px ${baseColor}30
+            // `,
           }}
         >
           <div className="pointer-events-none flex flex-col items-center justify-center gap-1 px-2 text-center leading-tight text-white">
@@ -70,11 +70,11 @@ const Bubble = forwardRef<HTMLDivElement, BubbleProps>(
               alt={`${symbol} icon`}
               className="pointer-events-none absolute top-1/2 left-1/2 size-[90%] -translate-x-1/2 -translate-y-1/2 rounded-full object-cover opacity-40"
             />
-            <span className="pointer-events-none text-base font-bold drop-shadow-sm">
+            <span className="pointer-events-none relative font-bold text-white">
               {symbol}
             </span>
             <span
-              className={`text-xs font-semibold ${textColor} pointer-events-none`}
+              className={`pointer-events-none relative text-sm font-semibold text-white`}
             >
               {formattedChange}
             </span>
