@@ -25,7 +25,7 @@ export const minikitConfig = {
       'Trade Base tokens through interactive bubbles. Click any bubble to view details and swap instantly',
     screenshotUrls: [`${ROOT_URL}/screenshot-portrait.png`],
     iconUrl: `${ROOT_URL}/icon.webp`,
-    splashImageUrl: `${ROOT_URL}/hero.webp`,
+    splashImageUrl: `${ROOT_URL}/splash.png`,
     splashBackgroundColor: '#0a0a0a',
     homeUrl: ROOT_URL,
     webhookUrl: `${ROOT_URL}/api/webhook`,

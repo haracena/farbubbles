@@ -503,6 +503,7 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
             type="text"
             placeholder="0.00"
             value={sellAmount}
+            disabled={!address}
             onChange={(e) => {
               const value = e.target.value.replace(/[^0-9.]/g, '')
               setSellAmount(value)
