@@ -49,7 +49,7 @@ export default function SwapReview({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="bg-neutral-800/95 p-6">
+      <div className="bg-neutral-800 p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-white">Review Swap</h2>
           <button
@@ -80,8 +80,14 @@ export default function SwapReview({
           </div>
           <div className="rounded-lg border border-white/20 bg-white/5 p-4">
             <div className="flex flex-col gap-2">
-              <p className="text-xs text-neutral-400">
-                <span className="text-neutral-100">0.15%</span> Agregator fee
+              <p className="flex items-center gap-1 text-xs text-neutral-400">
+                <span className="text-neutral-100">0.15%</span>{' '}
+                {/* <img
+                  src="assets/images/logos/0x-logo.webp"
+                  alt="0x"
+                  className="size-3 rounded-full"
+                />{' '} */}
+                0x Protocol fee
               </p>
               <p className="text-xs text-neutral-400">
                 <span className="text-neutral-100">0%</span> Platform fee
@@ -153,6 +159,15 @@ export default function SwapReview({
                 'Confirm'
               )}
             </button>
+          </div>
+
+          <div className="flex items-center justify-center gap-2 opacity-75">
+            <p className="text-xs text-neutral-400">Powered by</p>
+            <img
+              src="assets/images/logos/0x-logo.webp"
+              alt="0x"
+              className="size-4 rounded-xs"
+            />
           </div>
         </div>
       </div>

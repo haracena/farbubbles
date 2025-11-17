@@ -60,7 +60,7 @@ export default function BubblesContainer({
 
   // Inicializar Matter.js y las burbujas
   useEffect(() => {
-    const BOTTOM_OFFSET = 64
+    const BOTTOM_OFFSET = 72
     const width = window.innerWidth
     const height = window.innerHeight - BOTTOM_OFFSET
     const engine = Engine.create()
