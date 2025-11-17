@@ -29,9 +29,9 @@ export default function BubbleModal({
       </button>
       <div className="flex items-center gap-3">
         <img
-          src={selectedToken.iconUrl}
+          src={selectedToken.image}
           alt={`${selectedToken.symbol} icon`}
-          className="size-12 rounded-full"
+          className="size-12 rounded-full object-cover"
         />
         <div>
           <h3 className="text-lg font-bold">
@@ -39,40 +39,48 @@ export default function BubbleModal({
           </h3>
 
           <p className="text-sm opacity-80">
-            {new Intl.NumberFormat('en-US', {
-              style: 'currency',
-              currency: 'USD',
-              maximumFractionDigits: selectedToken.price >= 1 ? 2 : 6,
-            }).format(selectedToken.price)}
-            <span
-              className={`ml-1 text-sm font-semibold ${
-                selectedToken.change24h >= 0
-                  ? 'text-emerald-300'
-                  : 'text-rose-300'
-              }`}
-            >
-              {selectedToken.change24h >= 0 ? '+' : ''}
-              {selectedToken.change24h.toFixed(2)}% (24h)
-            </span>
+            {selectedToken.price !== null
+              ? new Intl.NumberFormat('en-US', {
+                  style: 'currency',
+                  currency: 'USD',
+                  maximumFractionDigits: selectedToken.price >= 1 ? 2 : 6,
+                }).format(selectedToken.price)
+              : 'N/A'}
+            {selectedToken.change['24h'] !== null && (
+              <span
+                className={`ml-1 text-sm font-semibold ${
+                  selectedToken.change['24h'] >= 0
+                    ? 'text-emerald-300'
+                    : 'text-rose-300'
+                }`}
+              >
+                {selectedToken.change['24h'] >= 0 ? '+' : ''}
+                {selectedToken.change['24h'].toFixed(2)}% (24h)
+              </span>
+            )}
           </p>
         </div>
       </div>
 
       <div className="mt-2 flex items-center gap-4 text-xs opacity-75">
-        <p>
-          Market cap:{' '}
-          {new Intl.NumberFormat('en-US', {
-            notation: 'compact',
-            maximumFractionDigits: 2,
-          }).format(selectedToken.marketCap)}
-        </p>
-        <p>
-          24h volume:{' '}
-          {new Intl.NumberFormat('en-US', {
-            notation: 'compact',
-            maximumFractionDigits: 2,
-          }).format(selectedToken.volume24h)}
-        </p>
+        {selectedToken.marketCap !== null && (
+          <p>
+            Market cap:{' '}
+            {new Intl.NumberFormat('en-US', {
+              notation: 'compact',
+              maximumFractionDigits: 2,
+            }).format(selectedToken.marketCap)}
+          </p>
+        )}
+        {selectedToken.volume24h !== null && (
+          <p>
+            24h volume:{' '}
+            {new Intl.NumberFormat('en-US', {
+              notation: 'compact',
+              maximumFractionDigits: 2,
+            }).format(selectedToken.volume24h)}
+          </p>
+        )}
       </div>
       <Chart
         data={[

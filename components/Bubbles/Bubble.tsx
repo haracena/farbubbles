@@ -3,14 +3,14 @@
 import { forwardRef, useRef } from 'react'
 
 export interface BubbleProps {
-  id: number
+  id: string
   size: number
   x: number
   y: number
   symbol: string
-  change24h: number
+  change24h: number | null
   iconUrl: string
-  onBubbleClick?: (id: number) => void
+  onBubbleClick?: (id: string) => void
 }
 
 const Bubble = forwardRef<HTMLDivElement, BubbleProps>(
@@ -31,11 +31,15 @@ const Bubble = forwardRef<HTMLDivElement, BubbleProps>(
       }
     }
 
-    const isPositive = change24h >= 0
+    const changeValue = change24h ?? 0
+    const isPositive = changeValue >= 0
     const baseColor = isPositive ? '#16a34a' : '#dc2626'
     const glowColor = isPositive ? '#34d399' : '#fb7185'
     const textColor = isPositive ? 'text-emerald-100' : 'text-rose-100'
-    const formattedChange = `${isPositive ? '+' : ''}${change24h.toFixed(2)}%`
+    const formattedChange =
+      change24h !== null
+        ? `${isPositive ? '+' : ''}${changeValue.toFixed(2)}%`
+        : 'N/A'
 
     return (
       <div

@@ -20,17 +20,25 @@ interface SwapProps {
   onClose?: () => void
 }
 export default function Swap({ selectedToken, onClose }: SwapProps) {
-  const [sellToken, setSellToken] = useState({
-    id: 0, // o el siguiente ID disponible
-    symbol: 'USDC',
+  const [sellToken, setSellToken] = useState<Token>({
+    id: 'usdc-0000-0000-0000-000000000000',
+    address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC en Base
+    chain: 8453,
     name: 'USD Coin',
+    symbol: 'USDC',
     price: 1.0, // USDC es un stablecoin, siempre cerca de $1
-    change24h: 0.0, // Los stablecoins suelen tener cambio mínimo
     marketCap: 28000000000000, // Market cap aproximado de USDC total
     volume24h: 8000000000, // Volumen 24h aproximado
-    iconUrl:
+    liquidity: 28000000000000,
+    holders: null,
+    change: {
+      '1h': null,
+      '24h': 0.0, // Los stablecoins suelen tener cambio mínimo
+      '7d': null,
+    },
+    image:
       'https://assets.coingecko.com/coins/images/6319/large/USD_Coin_icon.png?1696501939',
-    address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as `0x${string}`, // USDC en Base
+    deployedAt: '2023-01-01T00:00:00.000Z',
   })
   const [buyToken, setBuyToken] = useState(selectedToken)
   const [rotateChangeButton, setRotateChangeButton] = useState(0)
@@ -453,16 +461,10 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
     const tempSellToken = sellToken
     setSellToken({
       ...buyToken,
-      address:
-        buyToken.address ||
-        ('0x0000000000000000000000000000000000000000' as `0x${string}`),
-    } as typeof sellToken)
+    })
     setBuyToken({
       ...tempSellToken,
-      address:
-        tempSellToken.address ||
-        ('0x0000000000000000000000000000000000000000' as `0x${string}`),
-    } as typeof buyToken)
+    })
 
     // Actualizar el botón de rotación
     setRotateChangeButton((prev) => {
@@ -490,9 +492,9 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <img
-              src={sellToken.iconUrl}
+              src={sellToken.image}
               alt="logo"
-              className="size-8 rounded-full"
+              className="size-8 rounded-full object-cover"
             />
             <span className="font-regular text-2xl">{sellToken.symbol}</span>
           </div>
@@ -556,9 +558,9 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <img
-              src={buyToken.iconUrl}
+              src={buyToken.image}
               alt="logo"
-              className="size-8 rounded-full"
+              className="size-8 rounded-full object-cover"
             />
             <span className="font-regular text-2xl">{buyToken.symbol}</span>
           </div>
@@ -609,7 +611,8 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
           <ApproveOrReviewButton
             price={price}
             sellTokenAddress={
-              sellToken.address || '0x0000000000000000000000000000000000000000'
+              (sellToken.address ||
+                '0x0000000000000000000000000000000000000000') as Address
             }
             taker={address}
             onClick={fetchQuote}

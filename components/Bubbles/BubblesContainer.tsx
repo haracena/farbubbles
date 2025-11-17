@@ -19,15 +19,15 @@ interface BubblesContainerProps {
 }
 
 interface BubbleState {
-  id: number
+  id: string
   size: number
   symbol: string
   name: string
-  price: number
-  change24h: number
-  marketCap: number
-  volume24h: number
-  iconUrl: string
+  price: number | null
+  change24h: number | null
+  marketCap: number | null
+  volume24h: number | null
+  image: string
   x: number
   y: number
 }
@@ -43,12 +43,12 @@ export default function BubblesContainer({
     undefined as number | undefined,
   )
   const containerRef = useRef<HTMLDivElement>(null)
-  const bubbleElementsRef = useRef<Map<number, HTMLDivElement>>(new Map())
+  const bubbleElementsRef = useRef<Map<string, HTMLDivElement>>(new Map())
 
   console.log(selectedToken)
 
   // Registrar refs de las burbujas para poder actualizar su posición sin re-renderizar
-  const registerBubbleRef = useCallback((id: number) => {
+  const registerBubbleRef = useCallback((id: string) => {
     return (node: HTMLDivElement | null) => {
       if (node) {
         bubbleElementsRef.current.set(id, node)
@@ -104,8 +104,12 @@ export default function BubblesContainer({
     const minSize = Math.max(28, width * 0.08) // 8% del ancho, mínimo 28px
     const maxSize = Math.max(56, width * 0.42) // 42% del ancho, mínimo 56px
     const tokens = mockTokens.slice(0, maxBubbles)
-    const minMarketCap = Math.min(...tokens.map((t) => t.marketCap))
-    const maxMarketCap = Math.max(...tokens.map((t) => t.marketCap))
+    const marketCaps = tokens
+      .map((t) => t.marketCap)
+      .filter((cap): cap is number => cap !== null)
+    if (marketCaps.length === 0) return
+    const minMarketCap = Math.min(...marketCaps)
+    const maxMarketCap = Math.max(...marketCaps)
 
     const padding = 10
     const minX = padding
@@ -114,7 +118,7 @@ export default function BubblesContainer({
     const maxY = height - padding
 
     const tokenSizes = tokens.map((token) => {
-      if (maxMarketCap === minMarketCap) {
+      if (maxMarketCap === minMarketCap || !token.marketCap) {
         return { token, baseSize: minSize }
       }
       const logCap = Math.log10(token.marketCap)
@@ -168,10 +172,10 @@ export default function BubblesContainer({
         symbol: token.symbol,
         name: token.name,
         price: token.price,
-        change24h: token.change24h,
+        change24h: token.change['24h'],
         marketCap: token.marketCap,
         volume24h: token.volume24h,
-        iconUrl: token.iconUrl,
+        image: token.image,
         x: body.position.x - size / 2,
         y: body.position.y - size / 2,
       })),
@@ -221,7 +225,7 @@ export default function BubblesContainer({
     }
   }, [maxBubbles])
 
-  const handleBubbleClick = useCallback((bubbleId: number) => {
+  const handleBubbleClick = useCallback((bubbleId: string) => {
     const token = mockTokens.find((t) => t.id === bubbleId)
     if (token) {
       setSelectedToken(token)
@@ -241,7 +245,7 @@ export default function BubblesContainer({
           size={bubble.size}
           symbol={bubble.symbol}
           change24h={bubble.change24h}
-          iconUrl={bubble.iconUrl}
+          iconUrl={bubble.image}
           x={bubble.x}
           y={bubble.y}
           onBubbleClick={handleBubbleClick}

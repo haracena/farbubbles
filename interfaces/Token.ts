@@ -1,11 +1,19 @@
 export interface Token {
-  id: number
-  symbol: string
+  id: string
+  address: string
+  chain: number
   name: string
-  price: number
-  change24h: number
-  marketCap: number
-  volume24h: number
-  iconUrl: string
-  address?: `0x${string}` // Contract address for ERC20 tokens
+  symbol: string
+  price: number | null
+  marketCap: number | null
+  volume24h: number | null
+  liquidity: number | null
+  holders: number | null
+  change: {
+    '1h': number | null
+    '24h': number | null
+    '7d': number | null
+  }
+  image: string
+  deployedAt: string
 }
