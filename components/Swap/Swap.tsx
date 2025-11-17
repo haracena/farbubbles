@@ -436,10 +436,7 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
 
       console.error('Swap transaction error:', swapError)
       toast.error('Transaction error', {
-        description:
-          swapError instanceof Error
-            ? swapError.message
-            : 'Transaction failed. Please try again.',
+        description: 'Transaction failed. Please try again.',
         duration: 5000,
       })
     }
