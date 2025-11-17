@@ -11,16 +11,18 @@ const ROOT_URL =
  */
 export const minikitConfig = {
   accountAssociation: {
-    header: '',
-    payload: '',
-    signature: '',
+    header:
+      'eyJmaWQiOjExMDg0NTMsInR5cGUiOiJhdXRoIiwia2V5IjoiMHhFZWJEYjE5MzgyNjE3QTVmY2YzNDIzNTM1MDc0RTUxMkJEM0MzOGEyIn0',
+    payload: 'eyJkb21haW4iOiJ3d3cuYmFzZWJ1YmJsZXMueHl6In0',
+    signature:
+      '02DsQ7BDeJ0lAx+5wW0OHeIBlz83cWXFe7uVzKjS5xIOkdHyrrPZkISvbpVoFhSRLHHkhCftqphlis5Etcl7Dxs=',
   },
   miniapp: {
     version: '1',
     name: 'Base Bubbles',
-    subtitle: 'Interactive token bubbles with instant swaps',
+    subtitle: 'Trade tokens through bubbles',
     description:
-      'Explore Base tokens in a playful physics-based interface. Click bubbles to view token details and swap instantly using 0x protocol. Discover trending tokens from the Base ecosystem in a unique interactive experience.',
+      'Trade Base tokens through interactive bubbles. Click any bubble to view details and swap instantly',
     screenshotUrls: [`${ROOT_URL}/screenshot-portrait.png`],
     iconUrl: `${ROOT_URL}/icon.webp`,
     splashImageUrl: `${ROOT_URL}/hero.png`,
@@ -30,10 +32,10 @@ export const minikitConfig = {
     primaryCategory: 'finance',
     tags: ['defi', 'tokens', 'swap', 'base', 'interactive'],
     heroImageUrl: `${ROOT_URL}/hero.png`,
-    tagline: 'Trade tokens through interactive bubbles',
+    tagline: 'Trade tokens through bubbles',
     ogTitle: 'Base Bubbles - Interactive Token Trading on Base',
     ogDescription:
-      'Explore and swap Base tokens through an immersive physics-based bubble interface. Click any bubble to view token details and execute instant swaps powered by 0x protocol.',
+      'Trade Base tokens through interactive bubbles. Click any bubble to view details and swap instantly',
     ogImageUrl: `${ROOT_URL}/hero.png`,
   },
 } as const
