@@ -20,7 +20,7 @@ export const minikitConfig = {
   miniapp: {
     version: '1',
     name: 'Base Bubbles',
-    subtitle: 'Trade tokens through bubbles 🫧',
+    subtitle: 'Trade tokens through bubbles',
     description:
       'Trade Base tokens through interactive bubbles. Click any bubble to view details and swap instantly',
     screenshotUrls: [`${ROOT_URL}/screenshot-portrait.png`],
@@ -33,7 +33,7 @@ export const minikitConfig = {
     tags: ['defi', 'tokens', 'swap', 'base', 'interactive'],
     heroImageUrl: `${ROOT_URL}/hero.png`,
     tagline: 'Trade tokens through bubbles',
-    ogTitle: 'Bubbles & Swaps on Base 🫧',
+    ogTitle: 'Bubbles & Swaps on Base',
     ogDescription:
       'Trade Base tokens through interactive bubbles. Click any bubble to view details and swap instantly',
     ogImageUrl: `${ROOT_URL}/hero.png`,
