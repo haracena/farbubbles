@@ -60,7 +60,7 @@ export default function Chart({ data, colors }: ChartProps) {
         textColor: priceScaleTextColor,
       },
       width: chartContainerRef.current?.clientWidth || 0,
-      height: 240,
+      height: 200,
     })
 
     const handleResize = () => {
