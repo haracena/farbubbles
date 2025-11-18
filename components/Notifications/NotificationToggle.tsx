@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { useMiniKit } from '@coinbase/onchainkit/minikit'
 import { sdk } from '@farcaster/miniapp-sdk'
 import { Bell, BellOff, Loader } from 'lucide-react'
@@ -18,54 +18,58 @@ export default function NotificationToggle() {
   const [isEnabling, setIsEnabling] = useState(false)
 
   // Verificar estado de notificaciones
-  const checkNotificationStatus = useCallback(async () => {
-    // Verificar si estamos en un miniapp (context existe)
-    if (!context?.user?.fid) {
-      setIsLoading(false)
-      return
-    }
-
-    // Según la documentación: context.user.fid es string (Farcaster ID)
-    const fid = context.user.fid
-
-    try {
-      setIsLoading(true)
-
-      // Simplemente pasar el fid como query param
-      const response = await fetch(`/api/notifications/status?fid=${fid}`)
-
-      if (!response.ok) {
-        const errorData = await response
-          .json()
-          .catch(() => ({ message: 'Unknown error' }))
-        console.error('Notification status API error:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorData,
-          fid,
-        })
-        throw new Error(
-          errorData.message ||
-            `HTTP ${response.status}: ${response.statusText}`,
-        )
+  useEffect(() => {
+    const checkNotificationStatus = async () => {
+      // Verificar si estamos en un miniapp (context existe)
+      if (!context?.user?.fid) {
+        setIsLoading(false)
+        return
       }
 
-      const data: NotificationStatus = await response.json()
-      console.log(data)
-      setStatus(data)
-    } catch (error) {
-      console.error('Error checking notification status:', error)
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Failed to check notification status'
-      toast.error('Error', {
-        description: errorMessage,
-      })
-    } finally {
-      setIsLoading(false)
+      // Según la documentación: context.user.fid es string (Farcaster ID)
+      const fid = context.user.fid
+
+      try {
+        setIsLoading(true)
+
+        // Simplemente pasar el fid como query param
+        const response = await fetch(`/api/notifications/status?fid=${fid}`)
+
+        if (!response.ok) {
+          const errorData = await response
+            .json()
+            .catch(() => ({ message: 'Unknown error' }))
+          console.error('Notification status API error:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData,
+            fid,
+          })
+          throw new Error(
+            errorData.message ||
+              `HTTP ${response.status}: ${response.statusText}`,
+          )
+        }
+
+        const data: NotificationStatus = await response.json()
+        console.log(data)
+        setStatus(data)
+      } catch (error) {
+        console.error('Error checking notification status:', error)
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : 'Failed to check notification status'
+        toast.error('Error', {
+          description: errorMessage,
+        })
+      } finally {
+        setIsLoading(false)
+      }
     }
-  }, [context])
+
+    checkNotificationStatus()
+  }, [context?.user?.fid])
 
   // Activar notificaciones
   const enableNotifications = async () => {
@@ -90,15 +94,29 @@ export default function NotificationToggle() {
         })
         // Verificar el estado actualizado (el webhook debería haberlo guardado)
         // Esperar un poco para que el webhook procese
-        setTimeout(() => {
-          checkNotificationStatus()
+        setTimeout(async () => {
+          if (!context?.user?.fid) return
+          const response = await fetch(
+            `/api/notifications/status?fid=${context.user.fid}`,
+          )
+          if (response.ok) {
+            const data: NotificationStatus = await response.json()
+            setStatus(data)
+          }
         }, 1000)
       } else {
         // El usuario agregó la app pero no habilitó notificaciones
         toast.info('Info', {
           description: 'Mini app added. Enable notifications in settings.',
         })
-        checkNotificationStatus()
+        if (!context?.user?.fid) return
+        const response = await fetch(
+          `/api/notifications/status?fid=${context.user.fid}`,
+        )
+        if (response.ok) {
+          const data: NotificationStatus = await response.json()
+          setStatus(data)
+        }
       }
     } catch (error: unknown) {
       console.error('Error enabling notifications:', error)
@@ -143,10 +161,6 @@ export default function NotificationToggle() {
       setStatus({ enabled: false })
     }
   }
-
-  useEffect(() => {
-    checkNotificationStatus()
-  }, [checkNotificationStatus])
 
   if (isLoading) {
     return (
