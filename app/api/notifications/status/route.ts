@@ -21,7 +21,6 @@ export async function GET(request: NextRequest) {
     // Verificar si existe un token de notificaciones en Upstash Redis
     // Solo devolvemos un boolean por seguridad, sin exponer el token
     const tokenData = await getNotificationToken(MINIAPP_ID, userFid)
-    console.log(tokenData)
 
     return NextResponse.json({
       enabled: tokenData !== null,

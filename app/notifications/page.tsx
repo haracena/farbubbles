@@ -10,7 +10,9 @@ export default function Notifications() {
         <h2 className="text-lg font-semibold text-white">
           Recent Notifications
         </h2>
-        <NotificationItem />
+        <div className="flex flex-col overflow-hidden rounded-lg">
+          <NotificationItem />
+        </div>
       </div>
     </div>
   )

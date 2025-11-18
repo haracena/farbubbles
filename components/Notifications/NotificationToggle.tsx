@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMiniKit } from '@coinbase/onchainkit/minikit'
 import { sdk } from '@farcaster/miniapp-sdk'
 import { Bell, BellOff, Loader } from 'lucide-react'
@@ -13,63 +14,64 @@ interface NotificationStatus {
 
 export default function NotificationToggle() {
   const { context } = useMiniKit()
-  const [status, setStatus] = useState<NotificationStatus | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const queryClient = useQueryClient()
   const [isEnabling, setIsEnabling] = useState(false)
+  const [shouldPoll, setShouldPoll] = useState(false)
 
-  // Verificar estado de notificaciones
+  const fid = context?.user?.fid
+
+  // Query para verificar estado de notificaciones con polling condicional
+  const {
+    data: status,
+    isLoading,
+    error,
+  } = useQuery<NotificationStatus>({
+    queryKey: ['notification-status', fid],
+    queryFn: async () => {
+      if (!fid) throw new Error('No FID available')
+
+      const response = await fetch(`/api/notifications/status?fid=${fid}`)
+
+      if (!response.ok) {
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: 'Unknown error' }))
+        throw new Error(
+          errorData.message ||
+            `HTTP ${response.status}: ${response.statusText}`,
+        )
+      }
+
+      return response.json()
+    },
+    enabled: !!fid,
+    retry: shouldPoll ? 5 : 2, // Más reintentos cuando estamos esperando el webhook
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Backoff exponencial: 1s, 2s, 4s, 8s, 10s max
+    refetchInterval: shouldPoll ? 2000 : false, // Poll cada 2 segundos cuando esperamos el webhook
+    refetchIntervalInBackground: false,
+  })
+
+  console.log(status)
+
+  // Detectar cuando las notificaciones se habilitan y dejar de hacer polling
   useEffect(() => {
-    const checkNotificationStatus = async () => {
-      // Verificar si estamos en un miniapp (context existe)
-      if (!context?.user?.fid) {
-        setIsLoading(false)
-        return
-      }
-
-      // Según la documentación: context.user.fid es string (Farcaster ID)
-      const fid = context.user.fid
-
-      try {
-        setIsLoading(true)
-
-        // Simplemente pasar el fid como query param
-        const response = await fetch(`/api/notifications/status?fid=${fid}`)
-
-        if (!response.ok) {
-          const errorData = await response
-            .json()
-            .catch(() => ({ message: 'Unknown error' }))
-          console.error('Notification status API error:', {
-            status: response.status,
-            statusText: response.statusText,
-            error: errorData,
-            fid,
-          })
-          throw new Error(
-            errorData.message ||
-              `HTTP ${response.status}: ${response.statusText}`,
-          )
-        }
-
-        const data: NotificationStatus = await response.json()
-        console.log(data)
-        setStatus(data)
-      } catch (error) {
-        console.error('Error checking notification status:', error)
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : 'Failed to check notification status'
-        toast.error('Error', {
-          description: errorMessage,
-        })
-      } finally {
-        setIsLoading(false)
-      }
+    if (status?.enabled && shouldPoll) {
+      setShouldPoll(false)
     }
+  }, [status?.enabled, shouldPoll])
 
-    checkNotificationStatus()
-  }, [context?.user?.fid])
+  // Mostrar error si hay (solo una vez cuando no estamos haciendo polling)
+  useEffect(() => {
+    if (error && !shouldPoll && !isLoading) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to check notification status'
+      toast.error('Error', {
+        description: errorMessage,
+      })
+    }
+  }, [error, shouldPoll, isLoading])
 
   // Activar notificaciones
   const enableNotifications = async () => {
@@ -92,31 +94,25 @@ export default function NotificationToggle() {
         toast.success('Success', {
           description: 'Notifications enabled!',
         })
-        // Verificar el estado actualizado (el webhook debería haberlo guardado)
-        // Esperar un poco para que el webhook procese
-        setTimeout(async () => {
-          if (!context?.user?.fid) return
-          const response = await fetch(
-            `/api/notifications/status?fid=${context.user.fid}`,
-          )
-          if (response.ok) {
-            const data: NotificationStatus = await response.json()
-            setStatus(data)
-          }
-        }, 1000)
+        // Activar polling para verificar cuando el webhook guarde el token
+        setShouldPoll(true)
+        // Invalidar query para forzar refetch inmediato
+        queryClient.invalidateQueries({
+          queryKey: ['notification-status', fid],
+        })
+        // Dejar de hacer polling después de 30 segundos máximo
+        setTimeout(() => {
+          setShouldPoll(false)
+        }, 30000)
       } else {
         // El usuario agregó la app pero no habilitó notificaciones
         toast.info('Info', {
           description: 'Mini app added. Enable notifications in settings.',
         })
-        if (!context?.user?.fid) return
-        const response = await fetch(
-          `/api/notifications/status?fid=${context.user.fid}`,
-        )
-        if (response.ok) {
-          const data: NotificationStatus = await response.json()
-          setStatus(data)
-        }
+        // Invalidar para actualizar estado
+        queryClient.invalidateQueries({
+          queryKey: ['notification-status', fid],
+        })
       }
     } catch (error: unknown) {
       console.error('Error enabling notifications:', error)
@@ -157,8 +153,11 @@ export default function NotificationToggle() {
       toast.info('Info', {
         description: 'Disable notifications from app settings',
       })
-      // Actualizar estado local inmediatamente para mejor UX
-      setStatus({ enabled: false })
+      // Actualizar estado optimísticamente
+      queryClient.setQueryData<NotificationStatus>(
+        ['notification-status', fid],
+        { enabled: false },
+      )
     }
   }
 
@@ -183,7 +182,7 @@ export default function NotificationToggle() {
     )
   }
 
-  if (status === null) {
+  if (!status) {
     return null
   }
 
@@ -192,8 +191,8 @@ export default function NotificationToggle() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           {status.enabled ? (
-            <div className="flex size-10 items-center justify-center rounded-xl bg-emerald-500/20">
-              <Bell className="size-5 text-emerald-400" />
+            <div className="flex size-10 items-center justify-center rounded-xl bg-green-500/20">
+              <Bell className="size-5 text-green-400" />
             </div>
           ) : (
             <div className="flex size-10 items-center justify-center rounded-xl bg-neutral-500/20">
@@ -208,7 +207,7 @@ export default function NotificationToggle() {
             </h3>
             <p className="text-xs text-neutral-400">
               {status.enabled
-                ? 'You will receive updates about your swaps'
+                ? "You're all set! We'll keep you updated"
                 : 'Enable notifications to stay updated'}
             </p>
           </div>
@@ -217,7 +216,7 @@ export default function NotificationToggle() {
         <Switch
           checked={status.enabled}
           onCheckedChange={handleToggle}
-          disabled={isEnabling || isLoading}
+          disabled={isEnabling || isLoading || status?.enabled}
         />
       </div>
     </div>
