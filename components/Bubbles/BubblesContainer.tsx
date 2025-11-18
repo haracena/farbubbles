@@ -46,8 +46,6 @@ export default function BubblesContainer({
   const bubbleElementsRef = useRef<Map<string, HTMLDivElement>>(new Map())
   const isPausedRef = useRef<boolean>(false)
 
-  console.log(selectedToken)
-
   // Registrar refs de las burbujas para poder actualizar su posición sin re-renderizar
   const registerBubbleRef = useCallback((id: string) => {
     return (node: HTMLDivElement | null) => {
