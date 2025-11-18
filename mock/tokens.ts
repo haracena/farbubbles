@@ -35,19 +35,6 @@ const createClankerToken = (
 
 export const mockTokens: Token[] = [
   // Tokens from Clanker API with active trading (non-zero values in priceChangePercent1h, priceChangePercent24h, or volume24h)
-  createClankerToken(
-    497033,
-    'MON',
-    'Monad',
-    0.00608915811358687,
-    608915811.4,
-    null,
-    -2.437,
-    -1.659,
-    'https://turquoise-blank-swallow-685.mypinata.cloud/ipfs/bafkreifitizxzf7sgwhdltot5ifrvj7dpja332hlrancvh2my2bw3rfami',
-    '0xd7B35Cc8717A1B65eFdCbf15A66e9F61640d1b07',
-    '2025-10-14T09:21:21.000Z',
-  ),
 
   createClankerToken(
     8884,
@@ -61,20 +48,6 @@ export const mockTokens: Token[] = [
     'https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/295953fa-15ed-4d3c-241d-b6c1758c6200/original',
     '0x1bc0c42215582d5A085795f4baDbaC3ff36d1Bcb',
     '2024-11-08T20:43:33.000Z',
-  ),
-
-  createClankerToken(
-    575771,
-    'TEST',
-    'Test',
-    63.3100421232054,
-    45.91306912686259,
-    6.0894048882,
-    null,
-    -0.368,
-    'https://pbs.twimg.com/profile_images/1953706842032324608/Arf6RRS3_400x400.jpg',
-    '0xF961ff7A20B6f28351Caf962079bD01c5EFB56D9',
-    '2025-11-16T20:57:55.000Z',
   ),
 
   createClankerToken(

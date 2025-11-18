@@ -1,6 +1,6 @@
 'use client'
 
-import { Bubbles, User, Settings, Wallet, Bell } from 'lucide-react'
+import { Bubbles, User, Settings, List, Bell } from 'lucide-react'
 import ShareAppButton from '../ShareAppButton'
 import { usePathname, useRouter } from 'next/navigation'
 export default function TabBar() {
@@ -25,12 +25,12 @@ export default function TabBar() {
         ></div>
       </div>
       <div
-        className={`group relative flex cursor-pointer items-center justify-center rounded-xl p-4 transition-all duration-300 hover:bg-neutral-900/45 ${isActive('wallet') ? 'bg-neutral-900/50' : ''}`}
-        onClick={() => handleTabClick('/wallet')}
+        className={`group relative flex cursor-pointer items-center justify-center rounded-xl p-4 transition-all duration-300 hover:bg-neutral-900/45 ${isActive('tokens') ? 'bg-neutral-900/50' : ''}`}
+        onClick={() => handleTabClick('/tokens')}
       >
-        <Wallet className="size-5 text-neutral-400 transition-all duration-300 group-active:scale-90" />
+        <List className="size-5 text-neutral-400 transition-all duration-300 group-active:scale-90" />
         <div
-          className={`absolute bottom-0 left-1/2 h-1 w-6 -translate-x-1/2 rounded-t-xl ${isActive('wallet') ? 'bg-lime-500/80' : 'bg-transparent'}`}
+          className={`absolute bottom-0 left-1/2 h-1 w-6 -translate-x-1/2 rounded-t-xl ${isActive('tokens') ? 'bg-lime-500/80' : 'bg-transparent'}`}
         ></div>
       </div>
       <div

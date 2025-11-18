@@ -35,7 +35,6 @@ const Bubble = forwardRef<HTMLDivElement, BubbleProps>(
     const isPositive = changeValue >= 0
     const baseColor = isPositive ? '#16a34a' : '#dc2626'
     const glowColor = isPositive ? '#34d399' : '#fb7185'
-    const textColor = isPositive ? 'text-emerald-100' : 'text-rose-100'
     const formattedChange =
       change24h !== null
         ? `${isPositive ? '+' : ''}${changeValue.toFixed(2)}%`
@@ -64,17 +63,17 @@ const Bubble = forwardRef<HTMLDivElement, BubbleProps>(
             // `,
           }}
         >
-          <div className="pointer-events-none flex flex-col items-center justify-center gap-1 px-2 text-center leading-tight text-white">
+          <div className="pointer-events-none flex flex-col items-center justify-center gap-1 px-2 text-center leading-tight text-white select-none">
             <img
               src={iconUrl}
               alt={`${symbol} icon`}
               className="pointer-events-none absolute top-1/2 left-1/2 size-[90%] -translate-x-1/2 -translate-y-1/2 rounded-full object-cover opacity-40"
             />
-            <span className="pointer-events-none relative font-bold text-white">
+            <span className="pointer-events-none relative font-bold text-white select-none">
               {symbol}
             </span>
             <span
-              className={`pointer-events-none relative text-sm font-semibold text-white`}
+              className={`pointer-events-none relative text-sm font-semibold text-white select-none`}
             >
               {formattedChange}
             </span>
