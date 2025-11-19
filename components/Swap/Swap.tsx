@@ -14,6 +14,9 @@ import { toast } from 'sonner'
 import ApproveOrReviewButton from './ApproveOrReviewButton'
 import SwapReview from './SwapReview'
 import { formatAmount } from '@/lib/helpers'
+import TokenSelector from './TokenSelector'
+import { mockTokens } from '@/mock/tokens'
+import { ChevronDown } from 'lucide-react'
 
 interface SwapProps {
   selectedToken: Token
@@ -49,6 +52,7 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
   const [quote, setQuote] = useState<Record<string, unknown> | null>(null)
   const [showReview, setShowReview] = useState(false)
   const [isLoadingQuote, setIsLoadingQuote] = useState(false)
+  const [showTokenSelector, setShowTokenSelector] = useState(false)
   const { isConnected, address } = useAccount()
   const { connect, connectors } = useConnect()
 
@@ -486,15 +490,19 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
             Max
           </button>
         </div>
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
+        <div className="grid grid-cols-[auto_1fr] gap-2">
+          <button
+            onClick={() => setShowTokenSelector(true)}
+            className="flex items-center gap-2 rounded-full bg-white/5 p-1 transition-colors"
+          >
             <img
               src={sellToken.image}
               alt="logo"
               className="size-8 rounded-full object-cover"
             />
             <span className="font-regular text-2xl">{sellToken.symbol}</span>
-          </div>
+            <ChevronDown className="size-4 -translate-x-1 text-neutral-100" />
+          </button>
           <input
             className={`w-full text-end text-3xl font-medium focus:outline-none ${sellTokenBalance && sellAmount && parseFloat(sellAmount) > parseFloat(sellTokenBalance.formatted) ? 'text-red-400' : 'text-neutral-100'}`}
             type="text"
@@ -648,6 +656,21 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
         sellAmount={sellAmount}
         buyAmount={buyAmount}
         isLoading={isExecutingSwap}
+      />
+
+      {/* Token Selector Modal */}
+      <TokenSelector
+        isOpen={showTokenSelector}
+        onClose={() => setShowTokenSelector(false)}
+        onSelectToken={(token) => {
+          setSellToken(token)
+          // Clear amounts when changing token
+          setSellAmount('')
+          setBuyAmount('')
+        }}
+        currentToken={sellToken}
+        excludeToken={buyToken}
+        availableTokens={mockTokens}
       />
     </div>
   )
