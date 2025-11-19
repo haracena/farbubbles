@@ -67,7 +67,7 @@ export default function BubbleModal({
           </div>
         </div>
 
-        <div className="mt-2 flex items-center gap-4 text-xs opacity-75">
+        <div className="mt-1 flex items-center gap-4 text-xs opacity-75">
           {currentToken.marketCap !== null && (
             <p>
               Market cap:{' '}
