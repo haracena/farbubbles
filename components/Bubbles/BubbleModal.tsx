@@ -4,6 +4,7 @@ import Swap from '../Swap/Swap'
 import { Dialog, DialogContent } from '../ui/dialog'
 import { X, Loader } from 'lucide-react'
 import { useTokenChartData } from '@/hooks/useTokenChartData'
+import { useState } from 'react'
 
 interface BubbleModalProps {
   selectedToken: Token
@@ -13,8 +14,10 @@ export default function BubbleModal({
   selectedToken,
   onClose,
 }: BubbleModalProps) {
+  const [currentToken, setCurrentToken] = useState(selectedToken)
+
   const { data: chartData, isLoading: isLoadingChart } = useTokenChartData(
-    selectedToken.address || '',
+    currentToken.address || '',
   )
 
   return (
@@ -28,33 +31,33 @@ export default function BubbleModal({
         </button>
         <div className="flex items-center gap-3">
           <img
-            src={selectedToken.image}
-            alt={`${selectedToken.symbol} icon`}
+            src={currentToken.image}
+            alt={`${currentToken.symbol} icon`}
             className="size-12 rounded-full object-cover"
           />
           <div>
             <h3 className="text-lg font-bold">
-              {selectedToken.name} ({selectedToken.symbol})
+              {currentToken.name} ({currentToken.symbol})
             </h3>
 
             <p className="text-sm opacity-80">
-              {selectedToken.price !== null
+              {currentToken.price !== null
                 ? new Intl.NumberFormat('en-US', {
                     style: 'currency',
                     currency: 'USD',
-                    maximumFractionDigits: selectedToken.price >= 1 ? 2 : 6,
-                  }).format(selectedToken.price)
+                    maximumFractionDigits: currentToken.price >= 1 ? 2 : 6,
+                  }).format(currentToken.price)
                 : 'N/A'}
-              {selectedToken.change['24h'] !== null && (
+              {currentToken.change['24h'] !== null && (
                 <span
                   className={`ml-1 text-sm font-semibold ${
-                    selectedToken.change['24h'] >= 0
+                    currentToken.change['24h'] >= 0
                       ? 'text-emerald-300'
                       : 'text-rose-300'
                   }`}
                 >
-                  {selectedToken.change['24h'] >= 0 ? '+' : ''}
-                  {selectedToken.change['24h'].toFixed(2)}% (24h)
+                  {currentToken.change['24h'] >= 0 ? '+' : ''}
+                  {currentToken.change['24h'].toFixed(2)}% (24h)
                 </span>
               )}
             </p>
@@ -62,22 +65,22 @@ export default function BubbleModal({
         </div>
 
         <div className="mt-2 flex items-center gap-4 text-xs opacity-75">
-          {selectedToken.marketCap !== null && (
+          {currentToken.marketCap !== null && (
             <p>
               Market cap:{' '}
               {new Intl.NumberFormat('en-US', {
                 notation: 'compact',
                 maximumFractionDigits: 2,
-              }).format(selectedToken.marketCap)}
+              }).format(currentToken.marketCap)}
             </p>
           )}
-          {selectedToken.volume24h !== null && (
+          {currentToken.volume24h !== null && (
             <p>
               24h volume:{' '}
               {new Intl.NumberFormat('en-US', {
                 notation: 'compact',
                 maximumFractionDigits: 2,
-              }).format(selectedToken.volume24h)}
+              }).format(currentToken.volume24h)}
             </p>
           )}
         </div>
@@ -93,7 +96,11 @@ export default function BubbleModal({
           )}
         </div>
 
-        <Swap selectedToken={selectedToken} onClose={onClose} />
+        <Swap
+          selectedToken={currentToken}
+          onTokenChange={setCurrentToken}
+          onClose={onClose}
+        />
       </DialogContent>
     </Dialog>
   )

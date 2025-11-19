@@ -20,9 +20,14 @@ import { ChevronDown } from 'lucide-react'
 
 interface SwapProps {
   selectedToken: Token
+  onTokenChange?: (token: Token) => void
   onClose?: () => void
 }
-export default function Swap({ selectedToken, onClose }: SwapProps) {
+export default function Swap({
+  selectedToken,
+  onTokenChange,
+  onClose,
+}: SwapProps) {
   const [sellToken, setSellToken] = useState<Token>({
     id: 'usdc-0000-0000-0000-000000000000',
     address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC en Base
@@ -53,6 +58,7 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
   const [showReview, setShowReview] = useState(false)
   const [isLoadingQuote, setIsLoadingQuote] = useState(false)
   const [showTokenSelector, setShowTokenSelector] = useState(false)
+  const [showBuyTokenSelector, setShowBuyTokenSelector] = useState(false)
   const { isConnected, address } = useAccount()
   const { connect, connectors } = useConnect()
 
@@ -563,15 +569,19 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
       </div>
       <div className="relative -mt-5 rounded-lg border border-white/20 bg-white/10 p-2 shadow-md">
         <p className="mb-2 text-xs text-neutral-300">You receive</p>
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
+        <div className="grid grid-cols-[auto_1fr] gap-2">
+          <button
+            onClick={() => setShowBuyTokenSelector(true)}
+            className="flex items-center gap-2 rounded-full bg-white/5 p-1 transition-colors"
+          >
             <img
               src={buyToken.image}
               alt="logo"
               className="size-8 rounded-full object-cover"
             />
             <span className="font-regular text-2xl">{buyToken.symbol}</span>
-          </div>
+            <ChevronDown className="size-4 -translate-x-1 text-neutral-100" />
+          </button>
           <input
             className={`w-full text-end text-3xl font-medium focus:outline-none ${isLoadingPrice ? 'animate-pulse' : ''}`}
             type="text"
@@ -670,6 +680,22 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
         }}
         currentToken={sellToken}
         excludeToken={buyToken}
+        availableTokens={mockTokens}
+      />
+
+      {/* Buy Token Selector Modal */}
+      <TokenSelector
+        isOpen={showBuyTokenSelector}
+        onClose={() => setShowBuyTokenSelector(false)}
+        onSelectToken={(token) => {
+          setBuyToken(token)
+          onTokenChange?.(token) // Notify parent (BubbleModal)
+          // Clear amounts when changing token
+          setSellAmount('')
+          setBuyAmount('')
+        }}
+        currentToken={buyToken}
+        excludeToken={sellToken}
         availableTokens={mockTokens}
       />
     </div>
