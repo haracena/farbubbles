@@ -498,6 +498,8 @@ export default function Swap({ selectedToken, onClose }: SwapProps) {
           <input
             className={`w-full text-end text-3xl font-medium focus:outline-none ${sellTokenBalance && sellAmount && parseFloat(sellAmount) > parseFloat(sellTokenBalance.formatted) ? 'text-red-400' : 'text-neutral-100'}`}
             type="text"
+            inputMode="decimal"
+            pattern="^[0-9]*[.,]?[0-9]*$"
             placeholder="0.00"
             value={sellAmount}
             disabled={!address}

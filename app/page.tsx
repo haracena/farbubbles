@@ -14,7 +14,7 @@ export default function Home() {
   }, [setFrameReady, isFrameReady])
 
   return (
-    <div className="h-screen w-full pb-16">
+    <div className="h-screen w-full pb-10">
       <BubblesContainer maxBubbles={50} />
     </div>
   )
