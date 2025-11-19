@@ -1,5 +1,6 @@
+'use client'
 import { AreaSeries, ColorType, createChart } from 'lightweight-charts'
-import React, { useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 
 export interface ChartColors {
   backgroundColor?: string
@@ -43,7 +44,9 @@ export default function Chart({ data, colors }: ChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const chart = createChart(chartContainerRef.current || '', {
+    if (!chartContainerRef.current) return
+
+    const chart = createChart(chartContainerRef.current, {
       layout: {
         background: { type: ColorType.Solid, color: backgroundColor },
         textColor: axisTextColor ?? textColor,
@@ -58,6 +61,12 @@ export default function Chart({ data, colors }: ChartProps) {
       rightPriceScale: {
         borderColor: gridLineColor,
         textColor: priceScaleTextColor,
+        mode: 0, // Normal price scale
+        autoScale: true,
+        scaleMargins: {
+          top: 0.1,
+          bottom: 0.1,
+        },
       },
       width: chartContainerRef.current?.clientWidth || 0,
       height: 200,
@@ -75,6 +84,11 @@ export default function Chart({ data, colors }: ChartProps) {
       lineColor,
       topColor: areaTopColor,
       bottomColor: areaBottomColor,
+      priceFormat: {
+        type: 'price',
+        precision: 6,
+        minMove: 0.000001,
+      },
     })
     newSeries.setData(data)
 
@@ -96,6 +110,17 @@ export default function Chart({ data, colors }: ChartProps) {
     axisTextColor,
     priceScaleTextColor,
   ])
+
+  if (!data || data.length === 0) {
+    return (
+      <div
+        className="flex h-[200px] w-full items-center justify-center text-sm text-neutral-500"
+        style={{ backgroundColor }}
+      >
+        No chart data available
+      </div>
+    )
+  }
 
   return <div ref={chartContainerRef} />
 }

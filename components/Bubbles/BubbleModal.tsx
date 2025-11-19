@@ -2,7 +2,8 @@ import { Token } from '@/interfaces/Token'
 import Chart from '../Chart/Chart'
 import Swap from '../Swap/Swap'
 import { Dialog, DialogContent } from '../ui/dialog'
-import { X } from 'lucide-react'
+import { X, Loader } from 'lucide-react'
+import { useTokenChartData } from '@/hooks/useTokenChartData'
 
 interface BubbleModalProps {
   selectedToken: Token
@@ -12,6 +13,10 @@ export default function BubbleModal({
   selectedToken,
   onClose,
 }: BubbleModalProps) {
+  const { data: chartData, isLoading: isLoadingChart } = useTokenChartData(
+    selectedToken.address || '',
+  )
+
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="mt-0 w-[95vw] max-w-none space-y-3 rounded-lg border border-white/20 bg-neutral-800/95 p-4 text-white sm:rounded-lg">
@@ -76,20 +81,18 @@ export default function BubbleModal({
             </p>
           )}
         </div>
-        <Chart
-          data={[
-            { time: '2018-12-22', value: 32.51 },
-            { time: '2018-12-23', value: 31.11 },
-            { time: '2018-12-24', value: 27.02 },
-            { time: '2018-12-25', value: 27.32 },
-            { time: '2018-12-26', value: 25.17 },
-            { time: '2018-12-27', value: 28.89 },
-            { time: '2018-12-28', value: 25.46 },
-            { time: '2018-12-29', value: 23.92 },
-            { time: '2018-12-30', value: 22.68 },
-            { time: '2018-12-31', value: 22.67 },
-          ]}
-        />
+        <div className="relative min-h-[200px]">
+          {isLoadingChart && (
+            <div className="absolute inset-0 z-10 flex animate-pulse items-center justify-center gap-1 bg-neutral-800/50">
+              <Loader className="size-4 translate-y-px animate-spin text-neutral-500" />{' '}
+              <span>Loading chart data</span>
+            </div>
+          )}
+          {!isLoadingChart && chartData && chartData.length > 0 && (
+            <Chart data={chartData} />
+          )}
+        </div>
+
         <Swap selectedToken={selectedToken} onClose={onClose} />
       </DialogContent>
     </Dialog>
