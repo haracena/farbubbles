@@ -473,6 +473,9 @@ export default function Swap({
       ...tempSellToken,
     })
 
+    // Notificar al padre (BubbleModal) del nuevo buyToken
+    onTokenChange?.(tempSellToken)
+
     // Actualizar el botón de rotación
     setRotateChangeButton((prev) => {
       if (prev === 0) {
