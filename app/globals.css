@@ -4,6 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --animate-shine-reflection: shine-reflection 5s ease 0s infinite forwards;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -117,4 +118,133 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Animación de viento para burbujas - movimiento aleatorio suave */
+@keyframes windFloat {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  10% {
+    transform: translate(2px, -3px) rotate(0.5deg);
+  }
+  20% {
+    transform: translate(-1px, 2px) rotate(-0.3deg);
+  }
+  30% {
+    transform: translate(3px, 1px) rotate(0.7deg);
+  }
+  40% {
+    transform: translate(-2px, -2px) rotate(-0.5deg);
+  }
+  50% {
+    transform: translate(1px, 3px) rotate(0.4deg);
+  }
+  60% {
+    transform: translate(-3px, 1px) rotate(-0.6deg);
+  }
+  70% {
+    transform: translate(2px, -1px) rotate(0.3deg);
+  }
+  80% {
+    transform: translate(-1px, -2px) rotate(-0.4deg);
+  }
+  90% {
+    transform: translate(3px, 2px) rotate(0.6deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+@keyframes windFloat2 {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  15% {
+    transform: translate(-2px, 3px) rotate(-0.4deg);
+  }
+  25% {
+    transform: translate(3px, -1px) rotate(0.6deg);
+  }
+  35% {
+    transform: translate(-1px, -3px) rotate(-0.3deg);
+  }
+  45% {
+    transform: translate(2px, 2px) rotate(0.5deg);
+  }
+  55% {
+    transform: translate(-3px, 1px) rotate(-0.7deg);
+  }
+  65% {
+    transform: translate(1px, -2px) rotate(0.3deg);
+  }
+  75% {
+    transform: translate(-2px, -1px) rotate(-0.5deg);
+  }
+  85% {
+    transform: translate(3px, 2px) rotate(0.6deg);
+  }
+  95% {
+    transform: translate(-1px, 3px) rotate(-0.4deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+@keyframes windFloat3 {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  12% {
+    transform: translate(1px, -2px) rotate(0.3deg);
+  }
+  22% {
+    transform: translate(-3px, 1px) rotate(-0.6deg);
+  }
+  32% {
+    transform: translate(2px, 3px) rotate(0.5deg);
+  }
+  42% {
+    transform: translate(-1px, -1px) rotate(-0.3deg);
+  }
+  52% {
+    transform: translate(3px, -2px) rotate(0.7deg);
+  }
+  62% {
+    transform: translate(-2px, 2px) rotate(-0.4deg);
+  }
+  72% {
+    transform: translate(1px, -3px) rotate(0.4deg);
+  }
+  82% {
+    transform: translate(-3px, -1px) rotate(-0.6deg);
+  }
+  92% {
+    transform: translate(2px, 1px) rotate(0.5deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+.wind-animation {
+  animation: windFloat 12s ease-in-out infinite;
+}
+
+.wind-animation-delay-1 {
+  animation: windFloat2 18s ease-in-out infinite;
+  animation-delay: -5s;
+}
+
+.wind-animation-delay-2 {
+  animation: windFloat3 20s ease-in-out infinite;
+  animation-delay: -10s;
+}
+
+@keyframes shine-reflection {
+  0% { left: -24px; top: -24px; }
+  23% { left: 100%; top: 100%; }
+  100% { left: 100%; top: 100%; }
 }

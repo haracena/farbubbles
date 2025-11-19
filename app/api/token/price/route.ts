@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const swapFeeRecipient = '0x467051A5c4BD354fC0ca9fC1ed11Bf7F8F035730'
-  const swapFeeBps = 15
+  const swapFeeBps = 0
 
   const chainId = searchParams.get('chainId')
   const buyToken = searchParams.get('buyToken')

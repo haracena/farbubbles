@@ -38,6 +38,7 @@ import { Token } from '@/interfaces/Token'
 import { mockTokens } from '@/mock/tokens'
 import TokenSymbolModal from './TokenSymbolModal'
 import ShareAppButton from '../ShareAppButton'
+import { toast } from 'sonner'
 
 export const columns: ColumnDef<Token>[] = [
   // {
@@ -95,7 +96,8 @@ export const columns: ColumnDef<Token>[] = [
     },
     cell: ({ row }) => {
       const price = row.getValue('price') as number | null
-      if (price === null) return <span className="text-neutral-400">N/A</span>
+      if (price === null)
+        return <p className="text-center text-neutral-400">N/A</p>
       return (
         <span className="font-medium text-white">
           $
@@ -123,7 +125,7 @@ export const columns: ColumnDef<Token>[] = [
     cell: ({ row }) => {
       const marketCap = row.getValue('marketCap') as number | null
       if (marketCap === null)
-        return <span className="text-neutral-400">N/A</span>
+        return <p className="text-center text-neutral-400">N/A</p>
       const formatted = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
@@ -150,7 +152,8 @@ export const columns: ColumnDef<Token>[] = [
     },
     cell: ({ row }) => {
       const volume = row.getValue('volume24h') as number | null
-      if (volume === null) return <span className="text-neutral-400">N/A</span>
+      if (volume === null)
+        return <p className="text-center text-neutral-400">N/A</p>
       const formatted = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
@@ -177,7 +180,8 @@ export const columns: ColumnDef<Token>[] = [
     },
     cell: ({ row }) => {
       const change = row.original.change['24h']
-      if (change === null) return <span className="text-neutral-400">N/A</span>
+      if (change === null)
+        return <p className="text-center text-neutral-400">N/A</p>
       const isPositive = change >= 0
       return (
         <p
@@ -214,7 +218,10 @@ export const columns: ColumnDef<Token>[] = [
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
             <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(token.address)}
+              onClick={() => {
+                navigator.clipboard.writeText(token.address)
+                toast.success(`${token.symbol} address copied to clipboard`)
+              }}
             >
               Copy address
             </DropdownMenuItem>
