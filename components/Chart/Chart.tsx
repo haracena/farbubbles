@@ -14,7 +14,7 @@ export interface ChartColors {
 }
 
 export interface ChartProps {
-  data: { time: string; value: number }[]
+  data: { time: string | number; value: number }[]
   colors?: ChartColors
 }
 
@@ -57,6 +57,8 @@ export default function Chart({ data, colors }: ChartProps) {
       },
       timeScale: {
         borderColor: gridLineColor,
+        timeVisible: true, // Show time for intraday data
+        secondsVisible: false,
       },
       rightPriceScale: {
         borderColor: gridLineColor,
@@ -90,7 +92,7 @@ export default function Chart({ data, colors }: ChartProps) {
         minMove: 0.000001,
       },
     })
-    newSeries.setData(data)
+    newSeries.setData(data as any)
 
     window.addEventListener('resize', handleResize)
 

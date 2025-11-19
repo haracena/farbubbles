@@ -509,7 +509,11 @@ export default function Swap({
               alt="logo"
               className="size-8 rounded-full object-cover"
             />
-            <span className="font-regular text-2xl">{sellToken.symbol}</span>
+            <span
+              className={`font-regular ${sellToken.symbol.length > 5 ? 'text-lg' : 'text-xl'}`}
+            >
+              {sellToken.symbol}
+            </span>
             <ChevronDown className="size-4 -translate-x-1 text-neutral-100" />
           </button>
           <input
@@ -582,7 +586,11 @@ export default function Swap({
               alt="logo"
               className="size-8 rounded-full object-cover"
             />
-            <span className="font-regular text-2xl">{buyToken.symbol}</span>
+            <span
+              className={`font-regular ${buyToken.symbol.length > 5 ? 'text-lg' : 'text-xl'}`}
+            >
+              {buyToken.symbol}
+            </span>
             <ChevronDown className="size-4 -translate-x-1 text-neutral-100" />
           </button>
           <input

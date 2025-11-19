@@ -3,7 +3,7 @@ import Chart from '../Chart/Chart'
 import Swap from '../Swap/Swap'
 import { Dialog, DialogContent } from '../ui/dialog'
 import { X, Loader } from 'lucide-react'
-import { useTokenChartData } from '@/hooks/useTokenChartData'
+import { useTokenChartData, Timeframe } from '@/hooks/useTokenChartData'
 import { useState } from 'react'
 
 interface BubbleModalProps {
@@ -15,9 +15,12 @@ export default function BubbleModal({
   onClose,
 }: BubbleModalProps) {
   const [currentToken, setCurrentToken] = useState(selectedToken)
+  const [timeframe, setTimeframe] = useState<Timeframe>('24H')
 
   const { data: chartData, isLoading: isLoadingChart } = useTokenChartData(
     currentToken.address || '',
+    'base',
+    timeframe,
   )
 
   return (
@@ -84,6 +87,25 @@ export default function BubbleModal({
             </p>
           )}
         </div>
+
+        {/* Timeframe Selector */}
+        <div className="flex gap-1">
+          {(['1H', '24H', '7D', '30D'] as Timeframe[]).map((tf) => (
+            <button
+              key={tf}
+              onClick={() => setTimeframe(tf)}
+              className={`rounded px-3 py-1 text-xs font-medium transition-colors ${
+                timeframe === tf
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-white/10 text-neutral-300 hover:bg-white/20'
+              }`}
+            >
+              {tf}
+            </button>
+          ))}
+        </div>
+
+        {/* Chart */}
         <div className="relative min-h-[200px]">
           {isLoadingChart && (
             <div className="absolute inset-0 z-10 flex animate-pulse items-center justify-center gap-1 bg-neutral-800/50">
