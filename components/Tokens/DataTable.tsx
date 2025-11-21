@@ -35,7 +35,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Token } from '@/interfaces/Token'
-import { mockTokens } from '@/mock/tokens'
+import { clankerTokens } from '@/mock/tokens'
 import TokenSymbolModal from './TokenSymbolModal'
 import ShareAppButton from '../ShareAppButton'
 import { toast } from 'sonner'
@@ -244,7 +244,7 @@ export function TokensDataTable() {
   const [rowSelection, setRowSelection] = React.useState({})
 
   const table = useReactTable({
-    data: mockTokens,
+    data: clankerTokens,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,

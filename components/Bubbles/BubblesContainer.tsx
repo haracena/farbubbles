@@ -11,7 +11,7 @@ import Matter, {
   MouseConstraint,
 } from 'matter-js'
 import { Token } from '@/interfaces/Token'
-import { mockTokens } from '@/mock/tokens'
+import { clankerTokens } from '@/mock/tokens'
 import BubbleModal from './BubbleModal'
 
 interface BubblesContainerProps {
@@ -102,7 +102,7 @@ export default function BubblesContainer({
     const usedArea = totalArea * 0.9
     const minSize = Math.max(28, width * 0.08) // 8% del ancho, mínimo 28px
     const maxSize = Math.max(56, width * 0.42) // 42% del ancho, mínimo 56px
-    const tokens = mockTokens.slice(0, maxBubbles)
+    const tokens = clankerTokens.slice(0, maxBubbles)
     const marketCaps = tokens
       .map((t) => t.marketCap)
       .filter((cap): cap is number => cap !== null)
@@ -236,7 +236,7 @@ export default function BubblesContainer({
   }, [selectedToken])
 
   const handleBubbleClick = useCallback((bubbleId: string) => {
-    const token = mockTokens.find((t) => t.id === bubbleId)
+    const token = clankerTokens.find((t) => t.id === bubbleId)
     if (token) {
       setSelectedToken(token)
     }

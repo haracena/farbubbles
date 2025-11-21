@@ -33,8 +33,9 @@ const createClankerToken = (
   deployedAt,
 })
 
-export const mockTokens: Token[] = [
-  // Common Base tokens
+// Base tokens for trading only (USDC, ETH)
+// These will NOT appear in bubbles, only in swap selector
+export const baseTokens: Token[] = [
   {
     id: 'usdc-base',
     address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
@@ -75,8 +76,11 @@ export const mockTokens: Token[] = [
       'https://assets.coingecko.com/coins/images/279/large/ethereum.png?1696501628',
     deployedAt: '2023-01-01T00:00:00.000Z',
   },
+]
 
-  // Tokens from Clanker API with active trading (non-zero values in priceChangePercent1h, priceChangePercent24h, or volume24h)
+// Clanker tokens - these appear in bubbles AND swap selector
+export const clankerTokens: Token[] = [
+  // Tokens from Clanker API with active trading
 
   createClankerToken(
     8884,
@@ -414,3 +418,6 @@ export const mockTokens: Token[] = [
     '2024-12-02T18:13:27.000Z',
   ),
 ]
+
+// All tokens combined (for swap selector)
+export const mockTokens: Token[] = [...baseTokens, ...clankerTokens]

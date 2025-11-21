@@ -474,7 +474,13 @@ export default function Swap({
     })
 
     // Notificar al padre (BubbleModal) del nuevo buyToken
-    onTokenChange?.(tempSellToken)
+    // Solo si NO es un stablecoin
+    const isStablecoin = ['USDC', 'USDT', 'DAI', 'BUSD'].includes(
+      tempSellToken.symbol,
+    )
+    if (!isStablecoin) {
+      onTokenChange?.(tempSellToken)
+    }
 
     // Actualizar el botón de rotación
     setRotateChangeButton((prev) => {
@@ -700,7 +706,16 @@ export default function Swap({
         onClose={() => setShowBuyTokenSelector(false)}
         onSelectToken={(token) => {
           setBuyToken(token)
-          onTokenChange?.(token) // Notify parent (BubbleModal)
+
+          // Only update BubbleModal if NOT a stablecoin
+          // This keeps the modal showing interesting Clanker tokens
+          const isStablecoin = ['USDC', 'USDT', 'DAI', 'BUSD'].includes(
+            token.symbol,
+          )
+          if (!isStablecoin) {
+            onTokenChange?.(token)
+          }
+
           // Clear amounts when changing token
           setSellAmount('')
           setBuyAmount('')
