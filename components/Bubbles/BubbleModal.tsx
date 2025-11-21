@@ -63,7 +63,7 @@ export default function BubbleModal({
                     }`}
                   >
                     {change24h >= 0 ? '+' : ''}
-                    {change24h.toFixed(2)}% (24h)
+                    {change24h.toFixed(2)}% ({timeframe})
                   </span>
                 )}
               </p>

@@ -37,6 +37,9 @@ export default function BubblesContainer({
 }: BubblesContainerProps) {
   const [bubbles, setBubbles] = useState<BubbleState[]>([])
   const [selectedToken, setSelectedToken] = useState<Token | null>(null)
+  const [sizeCriteria, setSizeCriteria] = useState<'marketCap' | '24h' | '1h'>(
+    'marketCap',
+  )
   const engineRef = useRef<Engine | null>(null)
   const bodiesRef = useRef<Body[]>([])
   const animationFrameRef = useRef<number | undefined>(
@@ -117,14 +120,55 @@ export default function BubblesContainer({
     const maxY = height - padding
 
     const tokenSizes = tokens.map((token) => {
-      if (maxMarketCap === minMarketCap || !token.marketCap) {
+      let value: number
+      let minValue: number
+      let maxValue: number
+
+      // Determine value based on criteria
+      if (sizeCriteria === 'marketCap') {
+        if (!token.marketCap) return { token, baseSize: minSize }
+        value = token.marketCap
+        minValue = minMarketCap
+        maxValue = maxMarketCap
+      } else if (sizeCriteria === '24h') {
+        const change = token.change['24h']
+        if (change === null) return { token, baseSize: minSize }
+        value = Math.abs(change) // Use absolute value
+        const changes = tokens
+          .map((t) => t.change['24h'])
+          .filter((c): c is number => c !== null)
+          .map(Math.abs)
+        minValue = Math.min(...changes)
+        maxValue = Math.max(...changes)
+      } else {
+        // '1h'
+        const change = token.change['1h']
+        if (change === null) return { token, baseSize: minSize }
+        value = Math.abs(change)
+        const changes = tokens
+          .map((t) => t.change['1h'])
+          .filter((c): c is number => c !== null)
+          .map(Math.abs)
+        minValue = Math.min(...changes)
+        maxValue = Math.max(...changes)
+      }
+
+      if (maxValue === minValue) {
         return { token, baseSize: minSize }
       }
-      const logCap = Math.log10(token.marketCap)
-      const minLog = Math.log10(minMarketCap)
-      const maxLog = Math.log10(maxMarketCap)
-      const baseSize =
-        minSize + ((logCap - minLog) * (maxSize - minSize)) / (maxLog - minLog)
+
+      // Use log scale for market cap, linear for percentage changes
+      let normalizedValue: number
+      if (sizeCriteria === 'marketCap') {
+        const logValue = Math.log10(value)
+        const minLog = Math.log10(minValue)
+        const maxLog = Math.log10(maxValue)
+        normalizedValue = (logValue - minLog) / (maxLog - minLog)
+      } else {
+        normalizedValue = (value - minValue) / (maxValue - minValue)
+      }
+
+      const baseSize = minSize + normalizedValue * (maxSize - minSize)
       return { token, baseSize }
     })
 
@@ -228,7 +272,7 @@ export default function BubblesContainer({
       World.clear(engine.world, false)
       Engine.clear(engine)
     }
-  }, [maxBubbles])
+  }, [maxBubbles, sizeCriteria])
 
   // Efecto para pausar/reanudar animación cuando el modal se abre/cierra
   useEffect(() => {
@@ -243,33 +287,59 @@ export default function BubblesContainer({
   }, [])
 
   return (
-    <div
-      ref={containerRef}
-      className="relative h-screen w-full overflow-hidden"
-    >
-      {/* Burbujas */}
-      {bubbles.map((bubble) => (
-        <Bubble
-          key={bubble.id}
-          id={bubble.id}
-          size={bubble.size}
-          symbol={bubble.symbol}
-          change24h={bubble.change24h}
-          iconUrl={bubble.image}
-          x={bubble.x}
-          y={bubble.y}
-          onBubbleClick={handleBubbleClick}
-          ref={registerBubbleRef(bubble.id)}
-        />
-      ))}
+    <>
+      {/* Size Criteria Selector */}
+      <div
+        className="fixed top-2 left-1/2 z-50 flex w-max -translate-x-1/2 gap-1 rounded-full bg-neutral-800/90 p-1"
+        onTouchStart={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        {[
+          { value: 'marketCap' as const, label: 'Market Cap' },
+          { value: '24h' as const, label: '24h %' },
+          { value: '1h' as const, label: '1h %' },
+        ].map((option) => (
+          <button
+            key={option.value}
+            onClick={() => setSizeCriteria(option.value)}
+            className={`rounded-full px-2 py-2 text-xs font-medium transition-colors ${
+              sizeCriteria === option.value
+                ? 'bg-neutral-950 text-white'
+                : 'text-neutral-300 hover:bg-neutral-700'
+            }`}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+      <div
+        ref={containerRef}
+        className="relative h-screen w-full overflow-hidden"
+      >
+        {/* Burbujas */}
+        {bubbles.map((bubble) => (
+          <Bubble
+            key={bubble.id}
+            id={bubble.id}
+            size={bubble.size}
+            symbol={bubble.symbol}
+            change24h={bubble.change24h}
+            iconUrl={bubble.image}
+            x={bubble.x}
+            y={bubble.y}
+            onBubbleClick={handleBubbleClick}
+            ref={registerBubbleRef(bubble.id)}
+          />
+        ))}
 
-      {/* Información del usuario seleccionado */}
-      {selectedToken && (
-        <BubbleModal
-          selectedToken={selectedToken}
-          onClose={() => setSelectedToken(null)}
-        />
-      )}
-    </div>
+        {/* Información del usuario seleccionado */}
+        {selectedToken && (
+          <BubbleModal
+            selectedToken={selectedToken}
+            onClose={() => setSelectedToken(null)}
+          />
+        )}
+      </div>
+    </>
   )
 }

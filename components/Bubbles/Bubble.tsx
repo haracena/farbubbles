@@ -40,6 +40,10 @@ const Bubble = forwardRef<HTMLDivElement, BubbleProps>(
         ? `${isPositive ? '+' : ''}${changeValue.toFixed(2)}%`
         : 'N/A'
 
+    // Dynamic font sizing based on bubble size
+    const symbolFontSize = Math.max(10, Math.min(20, size * 0.25)) // 25% of bubble size
+    const percentageFontSize = symbolFontSize * 0.7 // 70% of symbol size
+
     return (
       <div
         ref={ref}
@@ -69,11 +73,15 @@ const Bubble = forwardRef<HTMLDivElement, BubbleProps>(
               alt={`${symbol} icon`}
               className="pointer-events-none absolute top-1/2 left-1/2 size-[90%] -translate-x-1/2 -translate-y-1/2 rounded-full object-cover opacity-40"
             />
-            <span className="pointer-events-none relative font-bold text-white select-none">
+            <span
+              className="pointer-events-none relative font-bold text-white select-none"
+              style={{ fontSize: `${symbolFontSize}px` }}
+            >
               {symbol}
             </span>
             <span
-              className={`pointer-events-none relative text-sm font-semibold text-white select-none`}
+              className="pointer-events-none relative font-semibold text-white select-none"
+              style={{ fontSize: `${percentageFontSize}px` }}
             >
               {formattedChange}
             </span>
