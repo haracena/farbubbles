@@ -9,6 +9,8 @@ export type Timeframe = '1H' | '24H' | '7D' | '30D'
 
 interface UseTokenChartDataResult {
   data: ChartData[]
+  currentPrice: number | null
+  change24h: number | null
   isLoading: boolean
   error: string | null
 }
@@ -26,6 +28,8 @@ export function useTokenChartData(
   timeframe: Timeframe = '24H',
 ): UseTokenChartDataResult {
   const [data, setData] = useState<ChartData[]>([])
+  const [currentPrice, setCurrentPrice] = useState<number | null>(null)
+  const [change24h, setChange24h] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -104,6 +108,35 @@ export function useTokenChartData(
           })
 
         setData(formattedData)
+
+        // Calculate current price (last close price from sorted data)
+        if (formattedData.length > 0) {
+          const currentClosePrice =
+            formattedData[formattedData.length - 1].value
+          setCurrentPrice(currentClosePrice)
+
+          // Calculate 24h change
+          // For 24H timeframe, compare first and last
+          // For other timeframes, find the data point ~24h ago
+          if (formattedData.length > 1) {
+            let oldPrice: number
+
+            if (timeframe === '24H' || timeframe === '1H') {
+              // For intraday, use first price in the dataset
+              oldPrice = formattedData[0].value
+            } else {
+              // For 7D/30D, try to find price from 24h ago (1 day back)
+              const oneDayAgo =
+                formattedData[formattedData.length - 2]?.value ||
+                formattedData[0].value
+              oldPrice = oneDayAgo
+            }
+
+            const priceChange =
+              ((currentClosePrice - oldPrice) / oldPrice) * 100
+            setChange24h(priceChange)
+          }
+        }
       } catch (err) {
         console.error('Error fetching chart data:', err)
         setError(err instanceof Error ? err.message : 'Unknown error')
@@ -115,5 +148,5 @@ export function useTokenChartData(
     fetchData()
   }, [tokenAddress, network, timeframe])
 
-  return { data, isLoading, error }
+  return { data, currentPrice, change24h, isLoading, error }
 }

@@ -17,11 +17,12 @@ export default function BubbleModal({
   const [currentToken, setCurrentToken] = useState(selectedToken)
   const [timeframe, setTimeframe] = useState<Timeframe>('24H')
 
-  const { data: chartData, isLoading: isLoadingChart } = useTokenChartData(
-    currentToken.address || '',
-    'base',
-    timeframe,
-  )
+  const {
+    data: chartData,
+    currentPrice,
+    change24h,
+    isLoading: isLoadingChart,
+  } = useTokenChartData(currentToken.address || '', 'base', timeframe)
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
@@ -43,27 +44,30 @@ export default function BubbleModal({
               {currentToken.name} ({currentToken.symbol})
             </h3>
 
-            <p className="text-sm opacity-80">
-              {currentToken.price !== null
-                ? new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD',
-                    maximumFractionDigits: currentToken.price >= 1 ? 2 : 6,
-                  }).format(currentToken.price)
-                : 'N/A'}
-              {currentToken.change['24h'] !== null && (
-                <span
-                  className={`ml-1 text-sm font-semibold ${
-                    currentToken.change['24h'] >= 0
-                      ? 'text-emerald-300'
-                      : 'text-rose-300'
-                  }`}
-                >
-                  {currentToken.change['24h'] >= 0 ? '+' : ''}
-                  {currentToken.change['24h'].toFixed(2)}% (24h)
-                </span>
-              )}
-            </p>
+            {isLoadingChart ? (
+              <p className="animate-pulse">...</p>
+            ) : (
+              <p className="text-sm opacity-80">
+                {currentPrice !== null || currentToken.price !== null
+                  ? new Intl.NumberFormat('en-US', {
+                      style: 'currency',
+                      currency: 'USD',
+                      maximumFractionDigits:
+                        (currentPrice ?? currentToken.price ?? 0) >= 1 ? 2 : 6,
+                    }).format(currentPrice ?? currentToken.price ?? 0)
+                  : 'N/A'}
+                {change24h !== null && (
+                  <span
+                    className={`ml-1 text-sm font-semibold ${
+                      change24h >= 0 ? 'text-emerald-300' : 'text-rose-300'
+                    }`}
+                  >
+                    {change24h >= 0 ? '+' : ''}
+                    {change24h.toFixed(2)}% (24h)
+                  </span>
+                )}
+              </p>
+            )}
           </div>
         </div>
 
