@@ -30,7 +30,7 @@ export function useTokens(params: UseTokensParams = {}) {
       }
 
       const result = (await response.json()) as ApiResponse
-      return result.data
+      return result.data.filter((token) => token.chain === 8453)
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     refetchInterval: 1000 * 60, // Refetch every minute

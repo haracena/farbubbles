@@ -39,6 +39,7 @@ import { clankerTokens } from '@/mock/tokens'
 import TokenSymbolModal from './TokenSymbolModal'
 import ShareAppButton from '../ShareAppButton'
 import { toast } from 'sonner'
+import { useTokens } from '@/hooks/useTokens'
 
 export const columns: ColumnDef<Token>[] = [
   // {
@@ -242,6 +243,8 @@ export function TokensDataTable() {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
+  const { data: clankerTokens, isLoading, error } = useTokens({ limit: 100 })
+  console.log(clankerTokens)
 
   const table = useReactTable({
     data: clankerTokens,
@@ -261,6 +264,10 @@ export function TokensDataTable() {
       rowSelection,
     },
   })
+
+  if (isLoading)
+    return <p className="my-4 animate-pulse text-neutral-400">Loading...</p>
+  if (error) return <p>Error: {error.message}</p>
 
   return (
     <div className="w-full">

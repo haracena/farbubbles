@@ -254,7 +254,7 @@ export default function BubblesContainer({
       }
 
       // Movimiento constante: fuerza aleatoria independiente para cada burbuja
-      const forceMagnitude = 0.12 // fuerza reducida para movimientos más lentos
+      const forceMagnitude = 0.08 // fuerza reducida para movimientos más lentos
       bodiesRef.current.forEach((body) => {
         const angle = Math.random() * 2 * Math.PI
         Matter.Body.applyForce(body, body.position, {
@@ -319,7 +319,7 @@ export default function BubblesContainer({
             {[
               { value: 'marketCap' as const, label: 'Market Cap' },
               { value: '24h' as const, label: '24h %' },
-              { value: '1h' as const, label: '1h %' },
+              // { value: '1h' as const, label: '1h %' },
             ].map((option) => (
               <button
                 key={option.value}
