@@ -11,8 +11,8 @@ import Matter, {
   MouseConstraint,
 } from 'matter-js'
 import { Token } from '@/interfaces/Token'
-import { clankerTokens } from '@/mock/tokens'
 import BubbleModal from './BubbleModal'
+import { useTokens } from '@/hooks/useTokens'
 
 interface BubblesContainerProps {
   maxBubbles?: number
@@ -35,6 +35,12 @@ interface BubbleState {
 export default function BubblesContainer({
   maxBubbles = 50,
 }: BubblesContainerProps) {
+  const {
+    data: clankerTokens,
+    isLoading,
+    error,
+  } = useTokens({ limit: maxBubbles })
+
   const [bubbles, setBubbles] = useState<BubbleState[]>([])
   const [selectedToken, setSelectedToken] = useState<Token | null>(null)
   const [sizeCriteria, setSizeCriteria] = useState<'marketCap' | '24h' | '1h'>(
@@ -62,6 +68,8 @@ export default function BubblesContainer({
 
   // Inicializar Matter.js y las burbujas
   useEffect(() => {
+    if (!clankerTokens || clankerTokens.length === 0) return
+
     const BOTTOM_OFFSET = 72
     const width = window.innerWidth
     const height = window.innerHeight - BOTTOM_OFFSET
@@ -272,74 +280,90 @@ export default function BubblesContainer({
       World.clear(engine.world, false)
       Engine.clear(engine)
     }
-  }, [maxBubbles, sizeCriteria])
+  }, [maxBubbles, sizeCriteria, clankerTokens])
 
   // Efecto para pausar/reanudar animación cuando el modal se abre/cierra
   useEffect(() => {
     isPausedRef.current = selectedToken !== null
   }, [selectedToken])
 
-  const handleBubbleClick = useCallback((bubbleId: string) => {
-    const token = clankerTokens.find((t) => t.id === bubbleId)
-    if (token) {
-      setSelectedToken(token)
-    }
-  }, [])
+  const handleBubbleClick = useCallback(
+    (bubbleId: string) => {
+      if (!clankerTokens) return
+      const token = clankerTokens.find((t) => t.id === bubbleId)
+      if (token) {
+        setSelectedToken(token)
+      }
+    },
+    [clankerTokens],
+  )
 
   return (
     <>
-      {/* Size Criteria Selector */}
-      <div
-        className="fixed top-2 left-1/2 z-50 flex w-max -translate-x-1/2 gap-1 rounded-full bg-neutral-800/90 p-1"
-        onTouchStart={(e) => e.stopPropagation()}
-        onPointerDown={(e) => e.stopPropagation()}
-      >
-        {[
-          { value: 'marketCap' as const, label: 'Market Cap' },
-          { value: '24h' as const, label: '24h %' },
-          { value: '1h' as const, label: '1h %' },
-        ].map((option) => (
-          <button
-            key={option.value}
-            onClick={() => setSizeCriteria(option.value)}
-            className={`rounded-full px-2 py-2 text-xs font-medium transition-colors ${
-              sizeCriteria === option.value
-                ? 'bg-neutral-950 text-white'
-                : 'text-neutral-300 hover:bg-neutral-700'
-            }`}
+      {isLoading || !clankerTokens ? (
+        <div className="flex h-screen w-full items-center justify-center">
+          <div className="animate-pulse text-neutral-400">Loading...</div>
+        </div>
+      ) : error ? (
+        <div className="flex h-screen w-full items-center justify-center">
+          <div className="text-red-400">Error loading tokens</div>
+        </div>
+      ) : (
+        <>
+          {/* Size Criteria Selector */}
+          <div
+            className="fixed top-2 left-1/2 z-50 flex w-max -translate-x-1/2 gap-1 rounded-full bg-neutral-800/90 p-1"
+            onTouchStart={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
           >
-            {option.label}
-          </button>
-        ))}
-      </div>
-      <div
-        ref={containerRef}
-        className="relative h-screen w-full overflow-hidden"
-      >
-        {/* Burbujas */}
-        {bubbles.map((bubble) => (
-          <Bubble
-            key={bubble.id}
-            id={bubble.id}
-            size={bubble.size}
-            symbol={bubble.symbol}
-            change24h={bubble.change24h}
-            iconUrl={bubble.image}
-            x={bubble.x}
-            y={bubble.y}
-            onBubbleClick={handleBubbleClick}
-            ref={registerBubbleRef(bubble.id)}
-          />
-        ))}
+            {[
+              { value: 'marketCap' as const, label: 'Market Cap' },
+              { value: '24h' as const, label: '24h %' },
+              { value: '1h' as const, label: '1h %' },
+            ].map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setSizeCriteria(option.value)}
+                className={`rounded-full px-2 py-2 text-xs font-medium transition-colors ${
+                  sizeCriteria === option.value
+                    ? 'bg-neutral-950 text-white'
+                    : 'text-neutral-300 hover:bg-neutral-700'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <div
+            ref={containerRef}
+            className="relative h-screen w-full overflow-hidden"
+          >
+            {/* Burbujas */}
+            {bubbles.map((bubble) => (
+              <Bubble
+                key={bubble.id}
+                id={bubble.id}
+                size={bubble.size}
+                symbol={bubble.symbol}
+                change24h={bubble.change24h}
+                iconUrl={bubble.image}
+                x={bubble.x}
+                y={bubble.y}
+                onBubbleClick={handleBubbleClick}
+                ref={registerBubbleRef(bubble.id)}
+              />
+            ))}
 
-        {/* Información del usuario seleccionado */}
-        {selectedToken && (
-          <BubbleModal
-            selectedToken={selectedToken}
-            onClose={() => setSelectedToken(null)}
-          />
-        )}
-      </div>
+            {/* Información del usuario seleccionado */}
+            {selectedToken && (
+              <BubbleModal
+                selectedToken={selectedToken}
+                onClose={() => setSelectedToken(null)}
+              />
+            )}
+          </div>
+        </>
+      )}
     </>
   )
 }
