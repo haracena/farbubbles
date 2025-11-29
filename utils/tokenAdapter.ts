@@ -111,18 +111,41 @@ export function geckoResponseToTokens(response: GeckoApiResponse): Token[] {
       })
       .filter((token): token is Token => token !== null)
 
+    // Deduplicate tokens by address, keeping the one with highest liquidity
+    const tokenMap = new Map<string, Token>()
+
+    tokens.forEach((token) => {
+      const existing = tokenMap.get(token.address)
+
+      if (!existing) {
+        tokenMap.set(token.address, token)
+      } else {
+        // Keep the token with higher liquidity
+        const existingLiquidity = existing.liquidity || 0
+        const newLiquidity = token.liquidity || 0
+
+        if (newLiquidity > existingLiquidity) {
+          tokenMap.set(token.address, token)
+        }
+      }
+    })
+
+    const deduplicatedTokens = Array.from(tokenMap.values())
+
     console.log('Converted tokens:', {
-      count: tokens.length,
-      firstToken: tokens[0]
+      totalPools: tokens.length,
+      uniqueTokens: deduplicatedTokens.length,
+      firstToken: deduplicatedTokens[0]
         ? {
-            symbol: tokens[0].symbol,
-            price: tokens[0].price,
-            chain: tokens[0].chain,
+            symbol: deduplicatedTokens[0].symbol,
+            price: deduplicatedTokens[0].price,
+            chain: deduplicatedTokens[0].chain,
+            liquidity: deduplicatedTokens[0].liquidity,
           }
         : null,
     })
 
-    return tokens
+    return deduplicatedTokens
   } catch (error) {
     console.error('Error in geckoResponseToTokens:', error)
     return []
