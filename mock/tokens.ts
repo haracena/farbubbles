@@ -9,6 +9,7 @@ const createClankerToken = (
   marketCap: number | null,
   volume24h: number | null,
   priceChangePercent1h: number | null,
+  priceChangePercent6h: number | null,
   priceChangePercent24h: number | null,
   imageUrl: string,
   contractAddress: string,
@@ -26,6 +27,7 @@ const createClankerToken = (
   holders: null,
   change: {
     '1h': priceChangePercent1h,
+    '6h': priceChangePercent6h,
     '24h': priceChangePercent24h,
     '7d': null,
   },

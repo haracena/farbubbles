@@ -22,7 +22,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
@@ -35,7 +34,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Token } from '@/interfaces/Token'
-import { clankerTokens } from '@/mock/tokens'
 import TokenSymbolModal from './TokenSymbolModal'
 import ShareAppButton from '../ShareAppButton'
 import { toast } from 'sonner'
@@ -243,11 +241,10 @@ export function TokensDataTable() {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
-  const { data: clankerTokens, isLoading, error } = useTokens({ limit: 100 })
-  console.log(clankerTokens)
+  const { data: clankerTokens, isLoading, error } = useTokens()
 
   const table = useReactTable({
-    data: clankerTokens,
+    data: clankerTokens || [],
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,

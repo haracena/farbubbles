@@ -11,6 +11,7 @@ export interface Token {
   holders: number | null
   change: {
     '1h': number | null
+    '6h': number | null
     '24h': number | null
     '7d': number | null
   }

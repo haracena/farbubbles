@@ -24,7 +24,7 @@ interface BubbleState {
   symbol: string
   name: string
   price: number | null
-  change24h: number | null
+  changePercent: number | null
   marketCap: number | null
   volume24h: number | null
   image: string
@@ -35,17 +35,13 @@ interface BubbleState {
 export default function BubblesContainer({
   maxBubbles = 50,
 }: BubblesContainerProps) {
-  const {
-    data: clankerTokens,
-    isLoading,
-    error,
-  } = useTokens({ limit: maxBubbles })
+  const { data: clankerTokens, isLoading, error } = useTokens() // GeckoTerminal uses pagination, not limit
 
   const [bubbles, setBubbles] = useState<BubbleState[]>([])
   const [selectedToken, setSelectedToken] = useState<Token | null>(null)
-  const [sizeCriteria, setSizeCriteria] = useState<'marketCap' | '24h' | '1h'>(
-    'marketCap',
-  )
+  const [sizeCriteria, setSizeCriteria] = useState<
+    'marketCap' | '24h' | '6h' | '1h'
+  >('marketCap')
   const engineRef = useRef<Engine | null>(null)
   const bodiesRef = useRef<Body[]>([])
   const animationFrameRef = useRef<number | undefined>(
@@ -148,6 +144,16 @@ export default function BubblesContainer({
           .map(Math.abs)
         minValue = Math.min(...changes)
         maxValue = Math.max(...changes)
+      } else if (sizeCriteria === '6h') {
+        const change = token.change['6h']
+        if (change === null) return { token, baseSize: minSize }
+        value = Math.abs(change)
+        const changes = tokens
+          .map((t) => t.change['6h'])
+          .filter((c): c is number => c !== null)
+          .map(Math.abs)
+        minValue = Math.min(...changes)
+        maxValue = Math.max(...changes)
       } else {
         // '1h'
         const change = token.change['1h']
@@ -216,6 +222,13 @@ export default function BubblesContainer({
     bodiesRef.current = tokenBubbles.map((b) => b.body)
     World.add(engine.world, bodiesRef.current)
 
+    // Get the change value based on current criteria
+    const getChangeValue = (token: (typeof tokens)[0]) => {
+      if (sizeCriteria === '1h') return token.change['1h']
+      if (sizeCriteria === '6h') return token.change['6h']
+      return token.change['24h']
+    }
+
     setBubbles(
       tokenBubbles.map(({ token, body, size }) => ({
         id: token.id,
@@ -223,7 +236,7 @@ export default function BubblesContainer({
         symbol: token.symbol,
         name: token.name,
         price: token.price,
-        change24h: token.change['24h'],
+        changePercent: getChangeValue(token),
         marketCap: token.marketCap,
         volume24h: token.volume24h,
         image: token.image,
@@ -319,7 +332,8 @@ export default function BubblesContainer({
             {[
               { value: 'marketCap' as const, label: 'Market Cap' },
               { value: '24h' as const, label: '24h %' },
-              // { value: '1h' as const, label: '1h %' },
+              { value: '6h' as const, label: '6h %' },
+              { value: '1h' as const, label: '1h %' },
             ].map((option) => (
               <button
                 key={option.value}
@@ -345,7 +359,7 @@ export default function BubblesContainer({
                 id={bubble.id}
                 size={bubble.size}
                 symbol={bubble.symbol}
-                change24h={bubble.change24h}
+                change24h={bubble.changePercent}
                 iconUrl={bubble.image}
                 x={bubble.x}
                 y={bubble.y}

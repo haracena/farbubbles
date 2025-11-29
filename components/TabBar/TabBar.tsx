@@ -22,13 +22,13 @@ const TabBar = memo(function TabBar() {
       { id: '', path: '/', icon: Bubbles },
       { id: 'tokens', path: '/tokens', icon: List },
       { id: 'notifications', path: '/notifications', icon: Bell },
-      { id: 'profile', path: '/profile', icon: User },
+      // { id: 'profile', path: '/profile', icon: User },
     ],
     [],
   )
 
   return (
-    <div className="fixed right-2 bottom-2 left-2 grid grid-cols-4 justify-items-center gap-2 rounded-2xl border border-neutral-200/10 bg-neutral-800/90 p-1 ring-4 ring-white/5">
+    <div className="fixed bottom-2 left-1/2 grid w-[75vw] -translate-x-1/2 grid-cols-3 justify-items-center gap-2 rounded-2xl border border-neutral-200/10 bg-neutral-800/90 p-1 ring-4 ring-white/5">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id
         const Icon = tab.icon
