@@ -42,8 +42,15 @@ export function useTokenChartData(
 
       try {
         // 1. Get the top pool for the token
+        // If token is native ETH (0xeeee...), use WETH address (0x4200...) for chart data
+        const chartTokenAddress =
+          tokenAddress.toLowerCase() ===
+          '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
+            ? '0x4200000000000000000000000000000000000006'
+            : tokenAddress
+
         const poolsResponse = await fetch(
-          `https://api.geckoterminal.com/api/v2/networks/${network}/tokens/${tokenAddress}/pools`,
+          `https://api.geckoterminal.com/api/v2/networks/${network}/tokens/${chartTokenAddress}/pools`,
         )
 
         if (!poolsResponse.ok) {
