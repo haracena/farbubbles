@@ -1,5 +1,5 @@
 import { useComposeCast } from '@coinbase/onchainkit/minikit'
-
+import { AnimatedShinyText } from '@/components/ui/animated-shiny-text'
 interface ShareAppButtonProps {
   text: string
   embedLink: string
@@ -21,5 +21,12 @@ export default function ShareAppButton({
     })
   }
 
-  return <button onClick={handleComposeWithEmbed}>{buttonText}</button>
+  return (
+    <button
+      className="cursor-pointer rounded-lg border border-neutral-600 px-4 py-2 transition-all hover:border-neutral-500"
+      onClick={handleComposeWithEmbed}
+    >
+      <AnimatedShinyText>{buttonText}</AnimatedShinyText>
+    </button>
+  )
 }

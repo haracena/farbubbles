@@ -29,7 +29,7 @@ export function useTokenBalances(tokens: Token[]) {
   const contracts = useMemo(
     () =>
       tokensWithAddresses.map((token) => ({
-        address: token.address!,
+        address: token.address as `0x${string}`,
         abi: erc20Abi,
         functionName: 'balanceOf' as const,
         args: address ? [address] : undefined,
@@ -51,7 +51,7 @@ export function useTokenBalances(tokens: Token[]) {
   const decimalsContracts = useMemo(
     () =>
       tokensWithAddresses.map((token) => ({
-        address: token.address!,
+        address: token.address as `0x${string}`,
         abi: erc20Abi,
         functionName: 'decimals' as const,
       })),
@@ -132,13 +132,13 @@ export function useTokenBalance(token: Token | undefined) {
       token?.address && !isNativeETH
         ? [
             {
-              address: token.address,
+              address: token.address as `0x${string}`,
               abi: erc20Abi,
               functionName: 'balanceOf' as const,
               args: address ? [address] : undefined,
             },
             {
-              address: token.address,
+              address: token.address as `0x${string}`,
               abi: erc20Abi,
               functionName: 'decimals' as const,
             },
@@ -154,11 +154,18 @@ export function useTokenBalance(token: Token | undefined) {
   const result = useMemo(() => {
     // Helper function to format with max 6 decimals
     const formatWithMaxDecimals = (value: string): string => {
-      const num = parseFloat(value)
-      if (isNaN(num)) return value
+      if (!value.includes('.')) return value
 
-      // Format to max 6 decimals and remove trailing zeros
-      return num.toFixed(6).replace(/\.?0+$/, '')
+      const [integer, fraction] = value.split('.')
+      if (!fraction) return integer
+
+      // Truncate to 6 decimals (floor) instead of rounding
+      const truncatedFraction = fraction.substring(0, 6)
+
+      // Remove trailing zeros
+      const cleanFraction = truncatedFraction.replace(/0+$/, '')
+
+      return cleanFraction ? `${integer}.${cleanFraction}` : integer
     }
 
     // Handle native ETH

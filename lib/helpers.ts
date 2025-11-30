@@ -22,6 +22,14 @@ export const formatAmount = (value: string): string => {
     maxDecimals = 6 // 6 decimales para números pequeños (<100)
   }
 
-  // Formatear y remover ceros al final
-  return num.toFixed(maxDecimals).replace(/\.?0+$/, '')
+  // Formatear y remover ceros al final usando truncamiento (floor)
+  if (!value.includes('.')) return value
+
+  const [integer, fraction] = value.split('.')
+  if (!fraction) return integer
+
+  const truncatedFraction = fraction.substring(0, maxDecimals)
+  const cleanFraction = truncatedFraction.replace(/0+$/, '')
+
+  return cleanFraction ? `${integer}.${cleanFraction}` : integer
 }
