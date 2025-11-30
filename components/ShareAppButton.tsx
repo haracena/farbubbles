@@ -23,7 +23,7 @@ export default function ShareAppButton({
 
   return (
     <button
-      className="cursor-pointer rounded-lg border border-neutral-600 px-4 py-2 transition-all hover:border-neutral-500"
+      className="cursor-pointer rounded-md border border-neutral-600 px-4 py-1 font-medium transition-all hover:border-neutral-500"
       onClick={handleComposeWithEmbed}
     >
       <AnimatedShinyText>{buttonText}</AnimatedShinyText>

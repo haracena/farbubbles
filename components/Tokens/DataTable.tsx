@@ -359,7 +359,7 @@ export function TokensDataTable() {
           <ShareAppButton
             text="Base market in bubbles 🫧  Find your next gem 💎"
             embedLink="https://farcaster.xyz/miniapps/zyE1qX8O3Y15/base-bubbles"
-            buttonText="Share Base Bubbles 🫧"
+            buttonText="Share Miniapp 🫧"
           />
         </div>
         <div className="space-x-2">
