@@ -66,7 +66,7 @@ export default function BubblesContainer({
   useEffect(() => {
     if (!clankerTokens || clankerTokens.length === 0) return
 
-    const BOTTOM_OFFSET = 72
+    const BOTTOM_OFFSET = 88
     const width = window.innerWidth
     const height = window.innerHeight - BOTTOM_OFFSET
     const engine = Engine.create()
@@ -350,7 +350,7 @@ export default function BubblesContainer({
           </div>
           <div
             ref={containerRef}
-            className="relative h-screen w-full overflow-hidden"
+            className="relative h-screen w-full overflow-hidden pt-10"
           >
             {/* Burbujas */}
             {bubbles.map((bubble) => (
