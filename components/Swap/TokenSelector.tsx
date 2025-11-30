@@ -43,7 +43,7 @@ function TokenRow({
           <p className="text-xs text-neutral-400">{token.name}</p>
         </div>
       </div>
-      {token.price !== null && (
+      {/* {token.price !== null && (
         <div className="text-right">
           <p className="text-sm text-neutral-400">
             $
@@ -52,7 +52,7 @@ function TokenRow({
               : token.price.toFixed(2)}
           </p>
         </div>
-      )}
+      )} */}
     </button>
   )
 }

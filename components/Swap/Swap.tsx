@@ -15,7 +15,8 @@ import ApproveOrReviewButton from './ApproveOrReviewButton'
 import SwapReview from './SwapReview'
 import { formatAmount } from '@/lib/helpers'
 import TokenSelector from './TokenSelector'
-import { mockTokens } from '@/mock/tokens'
+import { useTokens } from '@/hooks/useTokens'
+import { baseTokens } from '@/mock/tokens'
 import { ChevronDown } from 'lucide-react'
 
 interface SwapProps {
@@ -28,6 +29,10 @@ export default function Swap({
   onTokenChange,
   onClose,
 }: SwapProps) {
+  // Fetch real tokens from API and combine with base tokens
+  const { data: apiTokens } = useTokens()
+  const availableTokens = [...baseTokens, ...(apiTokens || [])]
+
   const [sellToken, setSellToken] = useState<Token>({
     id: 'usdc-0000-0000-0000-000000000000',
     address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC en Base
@@ -41,6 +46,7 @@ export default function Swap({
     holders: null,
     change: {
       '1h': null,
+      '6h': null,
       '24h': 0.0, // Los stablecoins suelen tener cambio mínimo
       '7d': null,
     },
@@ -697,7 +703,7 @@ export default function Swap({
         }}
         currentToken={sellToken}
         excludeToken={buyToken}
-        availableTokens={mockTokens}
+        availableTokens={availableTokens || []}
       />
 
       {/* Buy Token Selector Modal */}
@@ -722,7 +728,7 @@ export default function Swap({
         }}
         currentToken={buyToken}
         excludeToken={sellToken}
-        availableTokens={mockTokens}
+        availableTokens={availableTokens || []}
       />
     </div>
   )
