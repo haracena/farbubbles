@@ -40,4 +40,7 @@ export const minikitConfig = {
     imageUrl: `${ROOT_URL}/hero.webp`,
     buttonTitle: 'Launch Base Bubbles',
   },
+  baseBuilder: {
+    ownerAddress: '0xbE0Ca67A0FD1D8d1bbEEbd300D2977081d6E947a',
+  },
 } as const
